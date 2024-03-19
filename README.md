@@ -26,19 +26,19 @@ Lightweight and simpler alternative to TRPC.
 ## Install
 
 ```bash
-npm install svelte-prc valibot
+npm install svelte-rpc valibot
 ```
 
 ```bash
-yarn add svelte-prc valibot
+yarn add svelte-rpc valibot
 ```
 
 ```bash
-pnpm add svelte-prc valibot
+pnpm add svelte-rpc valibot
 ```
 
 ```bash
-bun install svelte-prc valibot
+bun install svelte-rpc valibot
 ```
 
 ## Usage
