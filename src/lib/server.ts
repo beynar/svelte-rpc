@@ -47,12 +47,13 @@ export const createApiHandle = <R extends Router>({
 	localsApiKey = 'api'
 }: {
 	router: R;
-	endpoint?: `/${string}`;
+	endpoint?: `/${string}` | false;
 	localsApiKey?: string;
 }): SvelteKitHandle => {
 	return async ({ event, resolve }) => {
 		Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
-		if (event.url.pathname.startsWith(endpoint)) {
+		console.log({ endpoint });
+		if (endpoint && event.url.pathname.startsWith(endpoint)) {
 			const handler = getHandler(
 				router,
 				event.url.pathname.split('/').slice(endpoint.split('/').length)

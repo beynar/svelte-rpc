@@ -1,5 +1,6 @@
 import { createApiHandle, procedure } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
+import { sequence } from '@sveltejs/kit/hooks';
 import { object, string } from 'valibot';
 
 const router = {
@@ -19,4 +20,7 @@ const router = {
 } satisfies Router;
 
 export type AppRouter = typeof router;
-export const handle = createApiHandle({ router, path: '/api' });
+export const handle = sequence(
+	createApiHandle({ router }),
+	createApiHandle({ router, endpoint: false, localsApiKey: 'admin' })
+);

@@ -85,6 +85,7 @@ export type AppRouter = typeof router;
 export const handle = createApiHandle({
 	router,
 	// The endoint where all of the procedures will be available
+	// Pass false to make it server only
 	endpoint: '/api',
 	// The key to put the server side api caller inside the event.locals object
 	localsApiKey: 'api'
