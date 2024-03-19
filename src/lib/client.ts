@@ -1,5 +1,5 @@
 import { objectToFormData } from './utils.js';
-import type { API, Router } from './types.js';
+import type { API, MaybePromise, Router } from './types.js';
 
 export const createRecursiveProxy = (
 	callback: (opts: { path: string[]; args: unknown[] }) => unknown,
@@ -32,7 +32,7 @@ export const createApiClient = <R extends Router>(
 		onError = () => {}
 	}: {
 		endpoint?: `/${string}`;
-		headers?: HeadersInit;
+		headers?: HeadersInit | ((path: string) => MaybePromise<HeadersInit>);
 		onError?: (error: App.Error) => void;
 	} = {
 		endpoint: '/api',
@@ -43,7 +43,7 @@ export const createApiClient = <R extends Router>(
 		return fetch(`${endpoint}/${opts.path.join('/')}`, {
 			method: 'POST',
 			body: objectToFormData(opts.args[0]),
-			headers
+			headers: typeof headers === 'function' ? await headers(opts.path.join('/')) : headers
 		}).then(async (res) => {
 			const result = await res.json();
 			if (res.ok) {

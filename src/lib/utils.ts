@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { instance, maxSize as ms, mimeType as mt } from 'valibot';
 const isObject = (value: unknown) =>
 	value &&
 	typeof value === 'object' &&
@@ -227,3 +228,11 @@ export function set<T, V>(obj: T, path: string | string[], value: V): T {
 
 	return obj;
 }
+
+export const file = ({
+	mimeType,
+	maxSize = 1024 * 1024 * 10
+}: {
+	mimeType: `${string}/${string}`[];
+	maxSize: number;
+}) => instance(File, [mt(mimeType), ms(maxSize)]);

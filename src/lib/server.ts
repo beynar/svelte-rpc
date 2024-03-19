@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type RequestEvent, type Handle as SvelteKitHandle, json, error } from '@sveltejs/kit';
 import { type Input, type BaseSchema, parse, ValiError } from 'valibot';
-import { formDataToObject } from './utils.js';
+import { formDataToObject, file } from './utils.js';
+
 import type {
 	API,
 	HandleFunction,
@@ -141,3 +142,4 @@ export class Handler<
 export const procedure = <Use extends Middleware[]>(...middlewares: Use) => {
 	return new Procedure(...middlewares);
 };
+export { file };
