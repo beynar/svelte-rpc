@@ -3,6 +3,10 @@
 Simple end-to-end type safety for SvelteKit.
 Lightweight and simpler alternative to TRPC.
 
+## Why ?
+
+I needed to stay inside the Svelekit realm to use cookies.set inside my procedures and I also needed to handle file uploads. I also wanted the same DX and type safety as TRPC. So I created svelte-rpc.
+
 ## Benefits
 
 - Same type safety as TRPC
@@ -12,9 +16,9 @@ Lightweight and simpler alternative to TRPC.
 - Ability to handle file uploads
 - Very tiny
 - You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
-- Simple to implement: a hook, a router and a client that infer its type from the router type
+- Simple to implement: a hook, a router and a client that infer its type from the router
 - Infinite and simple nesting of procedures
-- Can be called from the server side thanks to the caller function
+- Can be called from server side thanks to the caller function placed inside your locals object
 - Middleware support that populate the ctx object received by the handle function
 
 ## Drawbacks
@@ -122,3 +126,54 @@ export const api = createApiClient<AppRouter>({
 	});
 </script>
 ```
+
+### Helpers
+
+#### Type inference
+
+Svelte-rpc exports two inference helpers to help you infer the type of the input and output of a procedure.
+I usually prefer to let them globally available in my project using the app.d.ts file.
+
+```ts
+// app.d.ts
+declare global {
+	namespace App {
+		interface Locals {
+			api: import('svelte-rpc').API<import('./hooks.server').AppRouter>;
+		}
+		//... Name it like you want
+		type InferRPCReturnType<
+			P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
+		> = import('svelte-rpc').ReturnTypeOfProcedure<import('./hooks.server.js').AppRouter, P>;
+
+		//... Name it like you want
+		type InferRPCInput<
+			P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
+		> = import('svelte-rpc').InputOfProcedure<import('./hooks.server.js').AppRouter, P>;
+	}
+	//... other stuff of yours
+}
+export {};
+```
+
+````svelte
+<script lang="ts">
+	import { api } from '$lib/api';
+	import type { App } from '$app';
+
+	export let result: App.InferRPCReturnType<'test'>;
+	// result is of type { hello: string }
+</script>
+
+#### File schema
+
+Svelte-rpc exports a file schema to handle file uploads. It is a simple wrapper around valibot
+
+```ts
+import { file } from 'svelte-rpc';
+
+const imageSchema = file({
+	mimeType: ['image/png', 'image/jpeg'],
+	maxSize: 1024 * 1024 * 5
+});
+````
