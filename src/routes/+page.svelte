@@ -2,9 +2,9 @@
 	import { api } from './api.js';
 	export let data;
 	const test = async () => {
-		type ReturnType = InferRPCReturnType<'test.test'>;
+		type ReturnType = InferRPCReturnType<'route'>;
 		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test();
+		const res = await api.test.test().then;
 		console.log(res);
 	};
 
