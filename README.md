@@ -57,8 +57,8 @@ import { string } from 'valibot';
 const router = {
 	test: procedure((event) => {
 		// This is a middleware it will be called before the handle function
-		// Middlewares can be async or sync and are called in the order they are defined in the procedure,
-		// You can add as many middlewares as you want in the parameters of the procedure function
+		// Middlewares can be async or sync and are called in parallel,
+		// You can add as many middlewares as you want as arguments of the procedure function
 		if (!event.locals.user) {
 			error(401, 'You must be logged in to use this procedure');
 		}
