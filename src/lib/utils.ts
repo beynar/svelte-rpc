@@ -18,14 +18,6 @@ const isDate = (value: unknown): value is Date => value instanceof Date;
 const isNumber = (value: unknown): value is number =>
 	typeof value === 'number' || !isNaN(Number(value));
 
-const options = {
-	arrayIndexes: true,
-	excludeNull: true,
-	useDotSeparator: true,
-	useBrackets: true,
-	booleanAsNumbers: false
-};
-
 const TYPES_MAP = {
 	string: 0,
 	number: 1,
@@ -101,24 +93,19 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 		}
 		case 'array': {
 			value.forEach((item: unknown, index: number) => {
-				let computedKey = processedKey;
-				if (options.useBrackets) {
-					computedKey += `[${options.arrayIndexes ? index : ''}]`;
-				}
+				const computedKey = processedKey + `[${index}]`;
 				processFormData(item, formData, computedKey);
 			});
 			break;
 		}
 		case 'null': {
-			if (!options.excludeNull) {
-				formData.append(`${typeIndex}:${processedKey}`, '');
-			}
+			formData.append(`${typeIndex}:${processedKey}`, '');
+
 			break;
 		}
 		case 'undefined': {
-			if (!options.excludeNull) {
-				formData.append(`${typeIndex}:${processedKey}`, '');
-			}
+			formData.append(`${typeIndex}:${processedKey}`, '');
+
 			break;
 		}
 		case 'blob': {
@@ -126,7 +113,7 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 			break;
 		}
 		case 'date': {
-			formData.append(`${typeIndex}:${processedKey}`, value.toIsoString());
+			formData.append(`${typeIndex}:${processedKey}`, value.toISOString());
 			break;
 		}
 		case 'file': {
