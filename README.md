@@ -5,7 +5,7 @@ Lightweight and simpler alternative to TRPC.
 
 ## Why ?
 
-I needed to stay inside the Svelekit realm to use cookies.set inside my procedures and I also needed to handle file uploads. I also wanted the same DX and type safety as TRPC. So I created svelte-rpc.
+I needed to stay inside the SvelteKit realm to use cookies.set and other shenanigans inside my procedures and I also needed to handle file uploads. I also wanted the same DX and type safety as TRPC. So I created svelte-rpc.
 
 ## Benefits
 
@@ -139,7 +139,9 @@ I usually prefer to let them globally available in my project using the app.d.ts
 declare global {
 	namespace App {
 		interface Locals {
+			// This is the server side caller
 			api: import('svelte-rpc').API<import('./hooks.server').AppRouter>;
+			//... other stuff of yours
 		}
 		//... Name it like you want
 		type InferRPCReturnType<
@@ -156,14 +158,13 @@ declare global {
 export {};
 ```
 
-````svelte
+```svelte
 <script lang="ts">
-	import { api } from '$lib/api';
-	import type { App } from '$app';
-
 	export let result: App.InferRPCReturnType<'test'>;
+	// let { result }: { result: App.InferRPCReturnType<'test'> } = $props(); // If you are using svelte 5
 	// result is of type { hello: string }
 </script>
+```
 
 #### File schema
 
@@ -176,4 +177,4 @@ const imageSchema = file({
 	mimeType: ['image/png', 'image/jpeg'],
 	maxSize: 1024 * 1024 * 5
 });
-````
+```
