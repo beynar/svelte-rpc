@@ -11,9 +11,9 @@ Lightweight and simpler alternative to TRPC.
 - Only use FormData and Post request
 - Ability to handle file uploads
 - Very tiny
-- You stay in the SvelteKit real, so you can use cookies, error and other server side stuff of SvelteKit
+- You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
 - Simple to implement: a hook, a router and a client that infer its type from the router type
-- Infinite nested procedures
+- Infinite and simple nesting of procedures
 - Can be called from the server side thanks to the caller function
 - Middleware support that populate the ctx object received by the handle function
 
@@ -53,7 +53,9 @@ import { string } from 'valibot';
 
 const router = {
 	test: procedure((event) => {
-		// This is a middleware, it will be called before the handle function
+		// This is a middleware it will be called before the handle function
+		// Middlewares can be async or sync and are called in the order they are defined in the procedure,
+		// You can add as many middlewares as you want in the parameters of the procedure function
 		if (!event.locals.user) {
 			error('You must be logged in to use this procedure');
 		}
