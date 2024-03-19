@@ -42,19 +42,19 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 
 export const createApiHandle = <R extends Router>({
 	router,
-	path = '/api',
+	endpoint = '/api',
 	localsApiKey = 'api'
 }: {
 	router: R;
-	path: `/${string}`;
+	endpoint?: `/${string}`;
 	localsApiKey?: string;
 }): SvelteKitHandle => {
 	return async ({ event, resolve }) => {
 		Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
-		if (event.url.pathname.startsWith(path)) {
+		if (event.url.pathname.startsWith(endpoint)) {
 			const handler = getHandler(
 				router,
-				event.url.pathname.split('/').slice(path.split('/').length)
+				event.url.pathname.split('/').slice(endpoint.split('/').length)
 			);
 			const data = await handler.parse(await event.request.formData());
 			const result = await handler.call(event, data);
