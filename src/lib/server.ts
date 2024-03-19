@@ -41,7 +41,7 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 	}, []) as API<R>;
 };
 
-export const createApiHandle = <R extends Router>({
+export const createRPCHandle = <R extends Router>({
 	router,
 	endpoint = '/api',
 	localsApiKey = 'api'
@@ -58,7 +58,7 @@ export const createApiHandle = <R extends Router>({
 				router,
 				event.url.pathname.split('/').slice(endpoint.split('/').length)
 			);
-			const data = await handler.parse(await event.request.formData());
+			const data = await handler.parse(await event.request.clone().formData());
 			const result = await handler.call(event, data);
 			return json(result);
 		}

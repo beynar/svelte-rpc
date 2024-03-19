@@ -50,7 +50,7 @@ bun install svelte-rpc valibot
 
 ```ts
 // src/hooks.server.ts
-import { type Router, createApiHandle, procedure } from 'svelte-rpc';
+import { type Router, createRPCHandle, procedure } from 'svelte-rpc';
 import { object, string } from 'valibot';
 import { string } from 'valibot';
 
@@ -82,7 +82,7 @@ const router = {
 
 export type AppRouter = typeof router;
 
-export const handle = createApiHandle({
+export const handle = createRPCHandle({
 	router,
 	// The endoint where all of the procedures will be available
 	// Pass false to make it server only
@@ -96,10 +96,10 @@ export const handle = createApiHandle({
 
 ```ts
 // src/lib/api.ts
-import { createApiClient } from 'svelte-rpc/client';
+import { createRPCClient } from 'svelte-rpc/client';
 import type { AppRouter } from '../hooks.server';
 
-export const api = createApiClient<AppRouter>({
+export const api = createRPCClient<AppRouter>({
 	// The endpoint to make the request to, must be the same as the server
 	endpoint: '/api',
 	// The headers to send with the request

@@ -25,7 +25,7 @@ export const createRecursiveProxy = (
 	return proxy;
 };
 
-export const createApiClient = <R extends Router>(
+export const createRPCClient = <R extends Router>(
 	{
 		endpoint = '/api',
 		headers,
