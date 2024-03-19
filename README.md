@@ -1,4 +1,4 @@
-# svelte-prc
+# svelte-rpc
 
 Simple end-to-end type safety for SvelteKit.
 Lightweight and simpler alternative to TRPC.
@@ -12,7 +12,6 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 - Same type safety as TRPC
 - Familiar syntax to define procedures
 - Simpler api (no .mutate, .query) just call the procedure itself
-- Only use FormData and Post request
 - Ability to handle file uploads
 - Very tiny
 - You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
@@ -23,7 +22,7 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 
 ## Drawbacks
 
-- Only use FormData and Post request ?
+- Only use FormData and Post request
 - No subscriptions
 - Only works with Valibot (for now ?)
 
