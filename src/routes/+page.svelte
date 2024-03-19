@@ -12,8 +12,9 @@
 		type Payload = InferRPCInput<'test.test2'>;
 		const res = await api.test.test2({
 			test: 'true',
-			image: 'true'
+			image: new Date()
 		});
+		console.log(res);
 	};
 </script>
 

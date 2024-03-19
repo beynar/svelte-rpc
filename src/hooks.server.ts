@@ -1,7 +1,7 @@
 import { createApiHandle, procedure } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
 import { sequence } from '@sveltejs/kit/hooks';
-import { object, string } from 'valibot';
+import { date, object, string } from 'valibot';
 
 const router = {
 	route: procedure().handle(async () => {
@@ -12,7 +12,7 @@ const router = {
 			return { data: true };
 		}),
 		test2: procedure()
-			.input(object({ test: string(), image: string() }))
+			.input(object({ test: string(), image: date() }))
 			.handle(async () => {
 				return { data: true };
 			})

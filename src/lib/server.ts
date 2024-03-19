@@ -133,9 +133,6 @@ export class Handler<
 	): Promise<ReturnType<H>> => {
 		const ctx = await this.#useMiddlewares(event);
 		const payload = { event, input, ctx } as HandlePayload<any, any>;
-		if (!ctx) {
-			delete payload.ctx;
-		}
 		return this.#handler(payload as HandlePayload<S, Use>);
 	};
 }
