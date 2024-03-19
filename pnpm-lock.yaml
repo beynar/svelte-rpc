@@ -43,6 +43,9 @@ devDependencies:
   eslint-plugin-svelte:
     specifier: ^2.36.0-next.4
     version: 2.36.0-next.12(eslint@8.57.0)(svelte@5.0.0-next.80)
+  node-dir:
+    specifier: ^0.1.17
+    version: 0.1.17
   prettier:
     specifier: ^3.1.1
     version: 3.2.5
@@ -1761,6 +1764,13 @@ packages:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.6.2
+    dev: true
+
+  /node-dir@0.1.17:
+    resolution: {integrity: sha512-tmPX422rYgofd4epzrNoOXiE8XFZYOcCq1vD7MAXCDO+O+zndlA2ztdKKMa+EeuBG5tHETpr4ml4RGgpqDCCAg==}
+    engines: {node: '>= 0.10.5'}
+    dependencies:
+      minimatch: 3.1.2
     dev: true
 
   /normalize-path@3.0.0:

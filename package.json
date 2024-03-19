@@ -1,12 +1,12 @@
 {
 	"name": "svelte-rpc",
-	"version": "0.0.8",
+	"version": "0.0.12",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
-		"prepublishOnly": "npm run package",
+		"prepublishOnly": "npm run package && node prepare.js",
 		"test": "npm run test:integration && npm run test:unit",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -48,6 +48,7 @@
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0-next.4",
+		"node-dir": "^0.1.17",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
 		"publint": "^0.1.9",

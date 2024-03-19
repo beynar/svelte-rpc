@@ -60,7 +60,7 @@ const router = {
 		// Middlewares can be async or sync and are called in the order they are defined in the procedure,
 		// You can add as many middlewares as you want in the parameters of the procedure function
 		if (!event.locals.user) {
-			error('You must be logged in to use this procedure');
+			error(401, 'You must be logged in to use this procedure');
 		}
 		// The return of the middleware will be available in the ctx object of the handle function
 		return { user: event.locals.user };
