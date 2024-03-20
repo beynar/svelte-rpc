@@ -1,20 +1,20 @@
 <script lang="ts">
-	import { api } from './api.js';
-	const test = async () => {
-		type ReturnType = InferRPCReturnType<'route'>;
-		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test('').then((res) => {
-			console.log(res.data);
-			return res;
-		});
-	};
+  import { api } from './api.js';
+  const test = async () => {
+    type ReturnType = InferRPCReturnType<'route'>;
+    type Payload = InferRPCInput<'test.test2'>;
+    const res = await api.test.test('').then((res) => {
+      console.log(res.data);
+      return res;
+    });
+  };
 
-	const testError = async () => {
-		await api.ai('tell me a joke', ({ chunk, first }) => {
-			console.log(chunk.choices[0].delta.content, first);
-		});
-		console.log('done');
-	};
+  const testError = async () => {
+    await api.ai('tell me a joke', ({ chunk, first }) => {
+      console.log(chunk.choices[0].delta.content, first);
+    });
+    console.log('done');
+  };
 </script>
 
 <button on:click={test}> test </button>
