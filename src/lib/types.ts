@@ -96,9 +96,10 @@ type Get<T, K extends string> = K extends `${infer P}.${infer Rest}`
 		: never;
 
 type Procedures<R extends Router, P extends RouterPaths<R>> = Get<R, P>;
+type InferStreamReturnOrJsonReturn<T> = T extends ReadableStream<infer U> ? U : T;
 export type ReturnTypeOfProcedure<R extends Router, P extends RouterPaths<R>> =
 	Procedures<R, P> extends PreparedHandler
-		? Awaited<ReturnType<Procedures<R, P>['call']>>
+		? InferStreamReturnOrJsonReturn<Awaited<ReturnType<Procedures<R, P>['call']>>>
 		: Procedures<R, P>;
 
 export type InputOfProcedure<R extends Router, P extends RouterPaths<R>> =
