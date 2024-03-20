@@ -17,6 +17,7 @@ const router = {
 		.handle(async ({ input }) => {
 			const completion = await openai.chat.completions.create({
 				model: 'gpt-3.5-turbo',
+				max_tokens: 4,
 				messages: [
 					{ role: 'system', content: 'You are a helpful assistant.' },
 					{ role: 'user', content: input }
