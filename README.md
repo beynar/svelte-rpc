@@ -56,40 +56,40 @@ import { object, string } from 'valibot';
 import { string } from 'valibot';
 
 const router = {
- test: procedure((event) => {
-  // This is a middleware it will be called before the handle function
-  // Middlewares can be async or sync and are called in parallel,
-  // You can add as many middlewares as you want as arguments of the procedure function
-  if (!event.locals.user) {
-   error(401, 'You must be logged in to use this procedure');
-  }
-  // The return of the middleware will be available in the ctx object of the handle function
-  return { user: event.locals.user };
- })
-  .input(
-   object({
-    name: string()
-   })
-  )
-  .handle(async ({ event, input, ctx }) => {
-   // event is the request event of SvelteKit
-   // ctx.user contains the user object
-   // input is of type { name: string }
-   return {
-    hello: input.name
-   };
-  })
+	test: procedure((event) => {
+		// This is a middleware it will be called before the handle function
+		// Middlewares can be async or sync and are called in parallel,
+		// You can add as many middlewares as you want as arguments of the procedure function
+		if (!event.locals.user) {
+			error(401, 'You must be logged in to use this procedure');
+		}
+		// The return of the middleware will be available in the ctx object of the handle function
+		return { user: event.locals.user };
+	})
+		.input(
+			object({
+				name: string()
+			})
+		)
+		.handle(async ({ event, input, ctx }) => {
+			// event is the request event of SvelteKit
+			// ctx.user contains the user object
+			// input is of type { name: string }
+			return {
+				hello: input.name
+			};
+		})
 } satisfies Router;
 
 export type AppRouter = typeof router;
 
 export const handle = createRPCHandle({
- router,
- // The endoint where all of the procedures will be available
- // Pass false to make it server only
- endpoint: '/api',
- // The key to put the server side api caller inside the event.locals object
- localsApiKey: 'api'
+	router,
+	// The endoint where all of the procedures will be available
+	// Pass false to make it server only
+	endpoint: '/api',
+	// The key to put the server side api caller inside the event.locals object
+	localsApiKey: 'api'
 });
 ```
 
@@ -101,14 +101,14 @@ import { createRPCClient } from 'svelte-rpc/client';
 import type { AppRouter } from '../hooks.server';
 
 export const api = createRPCClient<AppRouter>({
- // The endpoint to make the request to, must be the same as the server
- endpoint: '/api',
- // The headers to send with the request
- headers: {},
- // Called when the request fails
- onError: (error) => {
-  console.error(error);
- }
+	// The endpoint to make the request to, must be the same as the server
+	endpoint: '/api',
+	// The headers to send with the request
+	headers: {},
+	// Called when the request fails
+	onError: (error) => {
+		console.error(error);
+	}
 });
 ```
 
@@ -116,15 +116,15 @@ export const api = createRPCClient<AppRouter>({
 
 ```svelte
 <script lang="ts">
- // src/routes/+page.svelte
- import { api } from '$lib/api';
- import { onMount } from 'svelte';
+	// src/routes/+page.svelte
+	import { api } from '$lib/api';
+	import { onMount } from 'svelte';
 
- onMount(async () => {
-  const result = await api.test({ name: 'world' });
-  console.log(result);
-  // result is of type { hello: string }
- });
+	onMount(async () => {
+		const result = await api.test({ name: 'world' });
+		console.log(result);
+		// result is of type { hello: string }
+	});
 </script>
 ```
 
@@ -142,69 +142,69 @@ import { string } from 'valibot';
 import OpenAI from 'openai';
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
 const openai = new OpenAI({
- apiKey: PRIVATE_OPEN_API_KEY
+	apiKey: PRIVATE_OPEN_API_KEY
 });
 
 export const aiRouter = {
- chat: procedure()
-  .input(string())
-  .handle(async ({ input }) => {
-   const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-     {
-      role: 'system',
-      content: 'You are a helpful assistant.'
-     },
-     { role: 'user', content: input }
-    ],
-    stream: true
-   });
-   return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
-  }),
- chatWithStreamHelper: procedure()
-  .input(string())
-  .handle(async ({ input }) => {
-   const completion = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-     {
-      role: 'system',
-      content: 'You are a helpful assistant.'
-     },
-     { role: 'user', content: input }
-    ],
-    stream: true
-   });
-   return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
-    onStart: () => {
-     console.log('AI stream started');
-    },
-    onChunk: ({ chunk, first }) => {
-     console.log('AI chunk received', chunk, first);
-    },
-    onEnd: (chunks) => {
-     console.log('AI stream ended', chunks);
-    }
-   });
-  })
+	chat: procedure()
+		.input(string())
+		.handle(async ({ input }) => {
+			const completion = await openai.chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				messages: [
+					{
+						role: 'system',
+						content: 'You are a helpful assistant.'
+					},
+					{ role: 'user', content: input }
+				],
+				stream: true
+			});
+			return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
+		}),
+	chatWithStreamHelper: procedure()
+		.input(string())
+		.handle(async ({ input }) => {
+			const completion = await openai.chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				messages: [
+					{
+						role: 'system',
+						content: 'You are a helpful assistant.'
+					},
+					{ role: 'user', content: input }
+				],
+				stream: true
+			});
+			return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
+				onStart: () => {
+					console.log('AI stream started');
+				},
+				onChunk: ({ chunk, first }) => {
+					console.log('AI chunk received', chunk, first);
+				},
+				onEnd: (chunks) => {
+					console.log('AI stream ended', chunks);
+				}
+			});
+		})
 } satisfies Router;
 ```
 
 ```svelte
 <script lang="ts">
- // src/routes/+page.svelte
- import { api } from '$lib/api';
- import { onMount } from 'svelte';
+	// src/routes/+page.svelte
+	import { api } from '$lib/api';
+	import { onMount } from 'svelte';
 
- const callAi = async () => {
-  await api.chat('Tell me a joke', ({ chunk, first }) => {
-   console.log(chunk.choices[0].delta.content, first);
-   // Chunk is type safe
-   // chunk.choices[0].delta.content is of type string | undefined
-  });
-  console.log('Done');
- };
+	const callAi = async () => {
+		await api.chat('Tell me a joke', ({ chunk, first }) => {
+			console.log(chunk.choices[0].delta.content, first);
+			// Chunk is type safe
+			// chunk.choices[0].delta.content is of type string | undefined
+		});
+		console.log('Done');
+	};
 </script>
 ```
 
@@ -218,32 +218,32 @@ I usually prefer to let them globally available in my project using the app.d.ts
 ```ts
 // app.d.ts
 declare global {
- namespace App {
-  interface Locals {
-   // This is the server side caller
-   api: import('svelte-rpc').API<import('./hooks.server').AppRouter>;
-   //... other stuff of yours
-  }
-  //... Name it like you want
-  type InferRPCReturnType<
-   P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
-  > = import('svelte-rpc').ReturnTypeOfProcedure<import('./hooks.server.js').AppRouter, P>;
+	namespace App {
+		interface Locals {
+			// This is the server side caller
+			api: import('svelte-rpc').API<import('./hooks.server').AppRouter>;
+			//... other stuff of yours
+		}
+		//... Name it like you want
+		type InferRPCReturnType<
+			P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
+		> = import('svelte-rpc').ReturnTypeOfProcedure<import('./hooks.server.js').AppRouter, P>;
 
-  //... Name it like you want
-  type InferRPCInput<
-   P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
-  > = import('svelte-rpc').InputOfProcedure<import('./hooks.server.js').AppRouter, P>;
- }
- //... other stuff of yours
+		//... Name it like you want
+		type InferRPCInput<
+			P extends import('svelte-rpc').RouterPaths<import('./hooks.server.js').AppRouter>
+		> = import('svelte-rpc').InputOfProcedure<import('./hooks.server.js').AppRouter, P>;
+	}
+	//... other stuff of yours
 }
 export {};
 ```
 
 ```svelte
 <script lang="ts">
- export let result: App.InferRPCReturnType<'test'>;
- // let { result }: { result: App.InferRPCReturnType<'test'> } = $props(); // If you are using svelte 5
- // result is of type { hello: string }
+	export let result: App.InferRPCReturnType<'test'>;
+	// let { result }: { result: App.InferRPCReturnType<'test'> } = $props(); // If you are using svelte 5
+	// result is of type { hello: string }
 </script>
 ```
 
@@ -255,7 +255,7 @@ Svelte-rpc exports a file schema to handle file uploads. It is a simple wrapper 
 import { file } from 'svelte-rpc';
 
 const imageSchema = file({
- mimeType: ['image/png', 'image/jpeg'],
- maxSize: 1024 * 1024 * 5
+	mimeType: ['image/png', 'image/jpeg'],
+	maxSize: 1024 * 1024 * 5
 });
 ```

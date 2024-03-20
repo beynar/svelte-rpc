@@ -8,7 +8,7 @@
 		{ "files": "*.svelte", "options": { "parser": "svelte" } },
 		{
 			"files": "*.md",
-			"options": { "tabWidth": 1, "useTabs": false }
+			"options": { "tabWidth": 1, "useTabs": true }
 		}
 	]
 }
