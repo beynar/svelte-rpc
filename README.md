@@ -72,7 +72,7 @@ const router = {
 			})
 		)
 		.handle(async ({ event, input, ctx }) => {
-			// event is the request event of SvleteKit
+			// event is the request event of SvelteKit
 			// ctx.user contains the user object
 			// input is of type { name: string }
 			return {
@@ -134,6 +134,7 @@ Svelte-rpc can handle streamed response from the server. This is useful when you
 
 ```ts
 // src/routers/ai.ts
+import { type Router, procedure } from 'svelte-rpc';
 import { createRPCClient } from 'svelte-rpc/client';
 import { string } from 'valibot';
 import OpenAI from 'openai';
@@ -166,11 +167,12 @@ export const aiRouter = {
 	import { onMount } from 'svelte';
 
 	const callAi = async () => {
-		api.chat('Tell me a joke', ({ chunk, first }) => {
+		await api.chat('Tell me a joke', ({ chunk, first }) => {
 			console.log(chunk.choices[0].delta.content, first);
 			// Chunk is type safe
 			// chunk.choices[0].delta.content is of type string | undefined
 		});
+		console.log('Done');
 	};
 </script>
 ```

@@ -131,7 +131,6 @@ export const objectToFormData = (payload: any, formData: FormData = new FormData
 	} else {
 		processFormData(payload, formData);
 	}
-	console.log({ formData: formDataToObject(formData), payload });
 	return formData;
 };
 

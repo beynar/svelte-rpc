@@ -8,9 +8,10 @@
 	};
 
 	const testError = async () => {
-		api.ai('tell me a joke', ({ chunk, first }) => {
+		await api.ai('tell me a joke', ({ chunk, first }) => {
 			console.log(chunk.choices[0].delta.content, first);
 		});
+		console.log('done');
 	};
 </script>
 
