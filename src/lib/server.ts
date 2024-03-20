@@ -80,10 +80,12 @@ export const createRPCHandle = <R extends Router>({
 }: {
 	router: R;
 	endpoint?: `/${string}` | false;
-	localsApiKey?: string;
+	localsApiKey?: string | false;
 }): SvelteKitHandle => {
 	return async ({ event, resolve }) => {
-		Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
+		if (typeof localsApiKey === 'string') {
+			Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
+		}
 		if (endpoint && event.url.pathname.startsWith(endpoint)) {
 			const handler = getHandler(
 				router,

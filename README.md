@@ -89,6 +89,7 @@ export const handle = createRPCHandle({
   // Pass false to make it server only
   endpoint: '/api',
   // The key to put the server side api caller inside the event.locals object
+  // Pass false to disable the server side caller
   localsApiKey: 'api'
 });
 ```
