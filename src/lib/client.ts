@@ -1,5 +1,5 @@
 import { objectToFormData } from './utils.js';
-import type { API, MaybePromise, Router } from './types.js';
+import type { API, MaybePromise, Router, StreamCallback } from './types.js';
 
 export const createRecursiveProxy = (
 	callback: (opts: { path: string[]; args: unknown[] }) => unknown,
@@ -25,6 +25,16 @@ export const createRecursiveProxy = (
 	return proxy;
 };
 
+const tryParse = (data: unknown) => {
+	if (typeof data !== 'string') {
+		return data;
+	}
+	try {
+		return JSON.parse(data);
+	} catch (e) {
+		return data;
+	}
+};
 export const createRPCClient = <R extends Router>(
 	{
 		endpoint = '/api',
@@ -45,11 +55,43 @@ export const createRPCClient = <R extends Router>(
 			body: objectToFormData(opts.args[0]),
 			headers: typeof headers === 'function' ? await headers(opts.path.join('/')) : headers
 		}).then(async (res) => {
-			const result = await res.json();
-			if (res.ok) {
-				return result;
+			if (res.headers.get('content-type') === 'text/event-stream') {
+				const reader = res.body!.getReader();
+				const decoder = new TextDecoder();
+				let buffer = '';
+				let first = true;
+				const callback = (chunk: string, done: boolean) => {
+					if (done) {
+						return;
+					}
+					const lines = (buffer + chunk).split('\n');
+					buffer = lines.pop()!;
+					lines.forEach((line, i) => {
+						if (first && i === 0 && line === '') {
+							return;
+						}
+						(opts.args[1] as StreamCallback)({
+							chunk: tryParse(line),
+							first
+						});
+						first = false;
+					});
+				};
+				// eslint-disable-next-line no-constant-condition
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) {
+						break;
+					}
+					callback(decoder.decode(value), done);
+				}
 			} else {
-				onError(result as App.Error);
+				const result = await res.json();
+				if (res.ok) {
+					return result;
+				} else {
+					onError(result as App.Error);
+				}
 			}
 		});
 	}, []) as API<R>;

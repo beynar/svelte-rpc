@@ -5,7 +5,7 @@ Lightweight and simpler alternative to TRPC.
 
 ## Why ?
 
-I needed to stay inside the SvelteKit realm to use cookies.set and other shenanigans inside my procedures and I also needed to handle file uploads. I also wanted the same DX and type safety as TRPC. So I created svelte-rpc.
+I needed to stay inside the SvelteKit realm to use cookies.set and other shenanigans inside my procedures, to handle file uploads and a typesafe way to receive streamed response from AI models. But I wanted the same DX and type safety as TRPC. So I created svelte-rpc.
 
 ## Benefits
 
@@ -13,6 +13,7 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 - Familiar syntax to define procedures
 - Simpler api (no .mutate, .query) just call the procedure itself
 - Ability to handle file uploads
+- Type safe streamed response
 - Very tiny
 - You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
 - Simple to implement: a hook, a router and a client that infer its type from the router
@@ -124,6 +125,53 @@ export const api = createRPCClient<AppRouter>({
 		console.log(result);
 		// result is of type { hello: string }
 	});
+</script>
+```
+
+### Streamed response
+
+Svelte-rpc can handle streamed response from the server. This is useful when you want to stream the response of an AI model for example. The only difference is that you need to pass a callback to the call function that will be called each time a chunk of the response is received.
+
+```ts
+// src/routers/ai.ts
+import { createRPCClient } from 'svelte-rpc/client';
+import { string } from 'valibot';
+import OpenAI from 'openai';
+import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
+const openai = new OpenAI({
+	apiKey: PRIVATE_OPEN_API_KEY
+});
+
+export const aiRouter = {
+	chat: procedure()
+		.input(string())
+		.handle(async ({ input }) => {
+			const completion = await openai.chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				messages: [
+					{ role: 'system', content: 'You are a helpful assistant.' },
+					{ role: 'user', content: input }
+				],
+				stream: true
+			});
+			return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
+		})
+} satisfies Router;
+```
+
+```svelte
+<script lang="ts">
+	// src/routes/+page.svelte
+	import { api } from '$lib/api';
+	import { onMount } from 'svelte';
+
+	const callAi = async () => {
+		api.chat('Tell me a joke', ({ chunk, first }) => {
+			console.log(chunk.choices[0].delta.content, first);
+			// Chunk is type safe
+			// chunk.choices[0].delta.content is of type string | undefined
+		});
+	};
 </script>
 ```
 

@@ -52,7 +52,6 @@ export const createRPCHandle = <R extends Router>({
 }): SvelteKitHandle => {
 	return async ({ event, resolve }) => {
 		Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
-		console.log({ endpoint });
 		if (endpoint && event.url.pathname.startsWith(endpoint)) {
 			const handler = getHandler(
 				router,
@@ -60,7 +59,33 @@ export const createRPCHandle = <R extends Router>({
 			);
 			const data = await handler.parse(await event.request.clone().formData());
 			const result = await handler.call(event, data);
-			return json(result);
+			console.log(
+				'result instanceof ReadableStream',
+				result instanceof ReadableStream,
+				result.constructor.name
+			);
+			if (result.constructor.name === 'ReadableStream') {
+				const streamReader = result.getReader();
+				const stream = new ReadableStream({
+					start(controller) {
+						const push = async () => {
+							const { done, value } = await streamReader.read();
+							if (done) {
+								controller.close();
+								return;
+							}
+							controller.enqueue(value);
+							push();
+						};
+						push();
+					}
+				});
+				return new Response(stream, {
+					headers: { 'Content-Type': 'text/event-stream' }
+				});
+			} else {
+				return json(result);
+			}
 		}
 
 		return resolve(event);

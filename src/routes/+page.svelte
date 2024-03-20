@@ -3,18 +3,14 @@
 	const test = async () => {
 		type ReturnType = InferRPCReturnType<'route'>;
 		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test();
+		const res = await api.test.test('');
 		console.log(res);
 	};
 
 	const testError = async () => {
-		type ReturnType = InferRPCReturnType<'test.test'>;
-		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test2({
-			test: 'true',
-			image: new Date()
+		api.ai('tell me a joke', ({ chunk, first }) => {
+			console.log(chunk.choices[0].delta.content, first);
 		});
-		console.log(res);
 	};
 </script>
 

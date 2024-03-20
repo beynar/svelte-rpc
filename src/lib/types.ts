@@ -4,7 +4,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { type Input, type BaseSchema } from 'valibot';
 
 export type PreparedHandler = {
-	call: (event: RequestEvent, input: any) => MaybePromise<any>;
+	call: Caller;
 	parse: (data: any, raw?: boolean) => MaybePromise<any>;
 };
 export type Router = {
@@ -17,14 +17,26 @@ export type API<R extends Router> = {
 			? PreparedHandlerType<R[K]>
 			: never;
 };
+type Caller = (event: RequestEvent, input: any) => MaybePromise<any>;
+type ReturnTypeOfCaller<C extends Caller> =
+	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Awaited<ReturnType<C>>;
+
+export type StreamCallback<S = any> = ({ chunk, first }: { chunk: S; first: boolean }) => void;
+type APICaller<C extends Caller, I> =
+	Awaited<ReturnType<C>> extends ReadableStream<infer S>
+		? I extends undefined
+			? (callback: StreamCallback<S>) => never
+			: (input: I, callback: StreamCallback<S>) => ReturnTypeOfCaller<C>
+		: I extends undefined
+			? () => ReturnTypeOfCaller<C>
+			: (input: I) => ReturnTypeOfCaller<C>;
 
 export type PreparedHandlerType<H extends PreparedHandler> = H['call'] extends (
 	...args: infer U
 ) => MaybePromise<any>
-	? U[1] extends undefined
-		? () => ReturnType<H['call']>
-		: (payload: U[1]) => ReturnType<H['call']>
+	? APICaller<H['call'], U[1]>
 	: never;
+
 export type MaybePromise<T> = T | Promise<T>;
 export type APIRoute<R extends Router> = {
 	[K in keyof R]: R[K] extends Router
