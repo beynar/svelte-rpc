@@ -102,9 +102,10 @@ import { createRPCClient } from 'svelte-rpc/client';
 import type { AppRouter } from '../hooks.server';
 
 export const api = createRPCClient<AppRouter>({
-  // The endpoint to make the request to, must be the same as the server
+  // The endpoint to make the request to, must be the same as defined in the createRPCHandle function
   endpoint: '/api',
   // The headers to send with the request
+  // You can also pass a function that will be called before the fetch request, the can be async and receive the input and the path of the procedure
   headers: {},
   // Called when the request fails
   onError: (error) => {

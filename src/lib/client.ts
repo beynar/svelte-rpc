@@ -32,7 +32,9 @@ export const createRPCClient = <R extends Router>(
 		onError = () => {}
 	}: {
 		endpoint?: `/${string}`;
-		headers?: HeadersInit | ((path: string) => MaybePromise<HeadersInit>);
+		headers?:
+			| HeadersInit
+			| (<I = unknown>({ path, input }: { path: string; input: I }) => MaybePromise<HeadersInit>);
 		onError?: (error: App.Error) => void;
 	} = {
 		endpoint: '/api',
@@ -43,7 +45,13 @@ export const createRPCClient = <R extends Router>(
 		return fetch(`${endpoint}/${opts.path.join('/')}`, {
 			method: 'POST',
 			body: objectToFormData(opts.args[0]),
-			headers: typeof headers === 'function' ? await headers(opts.path.join('/')) : headers
+			headers:
+				typeof headers === 'function'
+					? await headers({
+							path: opts.path.join('/'),
+							input: opts.args[0]
+						})
+					: headers
 		}).then(async (res) => {
 			if (res.headers.get('content-type') === 'text/event-stream') {
 				const reader = res.body!.getReader();
