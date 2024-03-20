@@ -136,7 +136,7 @@ The stream helper is useful when you want to handle the stream response lifecycl
 
 ```ts
 // src/routers/ai.ts
-import { type Router, procedure } from 'svelte-rpc';
+import { type Router, procedure, stream } from 'svelte-rpc';
 import { createRPCClient } from 'svelte-rpc/client';
 import { string } from 'valibot';
 import OpenAI from 'openai';
@@ -158,7 +158,7 @@ export const aiRouter = {
 				stream: true
 			});
 			return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
-		})
+		}),
 	chatWithStreamHelper: procedure()
 		.input(string())
 		.handle(async ({ input }) => {

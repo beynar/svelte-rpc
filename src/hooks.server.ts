@@ -25,7 +25,7 @@ const router = {
 			});
 			return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
 				onChunk: ({ chunk, first }) => {
-					console.log('AI chunk received', chunk, first);
+					console.log('AI chunk received', chunk.choices[0].delta.content, first);
 				},
 				onEnd: (chunks) => {
 					console.log('AI stream ended', chunks);
