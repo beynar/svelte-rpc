@@ -3,6 +3,11 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { type Input, type BaseSchema } from 'valibot';
 
+export type StreamsCallbacks<C> = {
+	onStart?: () => MaybePromise<void>;
+	onChunk?: (onChunk: { chunk: C; first: boolean }) => MaybePromise<void>;
+	onEnd?: (chunks: C[]) => MaybePromise<void>;
+};
 export type PreparedHandler = {
 	call: Caller;
 	parse: (data: any, raw?: boolean) => MaybePromise<any>;
@@ -19,7 +24,7 @@ export type API<R extends Router> = {
 };
 type Caller = (event: RequestEvent, input: any) => MaybePromise<any>;
 type ReturnTypeOfCaller<C extends Caller> =
-	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Awaited<ReturnType<C>>;
+	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Promise<Awaited<ReturnType<C>>>;
 
 export type StreamCallback<S = any> = ({ chunk, first }: { chunk: S; first: boolean }) => void;
 type APICaller<C extends Caller, I> =

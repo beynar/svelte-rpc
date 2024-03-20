@@ -1,4 +1,4 @@
-import { createRPCHandle, procedure } from '$lib/server.js';
+import { createRPCHandle, procedure, stream } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
 import { sequence } from '@sveltejs/kit/hooks';
 import { date, object, string } from 'valibot';
@@ -23,7 +23,17 @@ const router = {
 				],
 				stream: true
 			});
-			return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
+			return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
+				onChunk: ({ chunk, first }) => {
+					console.log('AI chunk received', chunk, first);
+				},
+				onEnd: (chunks) => {
+					console.log('AI stream ended', chunks);
+				},
+				onStart: () => {
+					console.log('AI stream started');
+				}
+			});
 		}),
 	test: {
 		test: procedure()

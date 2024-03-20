@@ -222,3 +222,14 @@ export const file = ({
 	mimeType: `${string}/${string}`[];
 	maxSize: number;
 }) => instance(File, [mt(mimeType), ms(maxSize)]);
+
+export const tryParse = <C>(data: unknown) => {
+	if (typeof data !== 'string') {
+		return data as C;
+	}
+	try {
+		return JSON.parse(data) as C;
+	} catch (e) {
+		return data as C;
+	}
+};

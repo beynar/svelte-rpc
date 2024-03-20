@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type RequestEvent, type Handle as SvelteKitHandle, json, error } from '@sveltejs/kit';
-import { type Input, type BaseSchema, parse, ValiError } from 'valibot';
-import { formDataToObject, file } from './utils.js';
+import { type Input, type BaseSchema, parse, ValiError, type MaybePromise } from 'valibot';
+import { formDataToObject, file, tryParse } from './utils.js';
 
 import type {
 	API,
@@ -11,7 +11,8 @@ import type {
 	Middleware,
 	PreparedHandler,
 	ReturnOfMiddlewares,
-	Router
+	Router,
+	StreamsCallbacks
 } from './types.js';
 import { createRecursiveProxy } from './client.js';
 
@@ -41,6 +42,37 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 	}, []) as API<R>;
 };
 
+export const stream = <C>(result: ReadableStream<C>, callbacks?: StreamsCallbacks<C>) => {
+	const streamReader = result.getReader();
+	const chunks: C[] = [];
+	let first = true;
+	const decoder = new TextDecoder();
+	const stream = new ReadableStream({
+		start(controller) {
+			callbacks?.onStart?.();
+			const push = async () => {
+				const { done, value } = await streamReader.read();
+
+				if (done) {
+					controller.close();
+					callbacks?.onEnd?.(chunks);
+					return;
+				} else if (value) {
+					const chunk = tryParse<C>(decoder.decode(value as any));
+					chunks.push(chunk);
+					callbacks?.onChunk?.({ chunk, first });
+					first = false;
+				}
+				controller.enqueue(value);
+				push();
+			};
+			push();
+		}
+	});
+
+	return stream as ReadableStream<C>;
+};
+
 export const createRPCHandle = <R extends Router>({
 	router,
 	endpoint = '/api',
@@ -59,28 +91,8 @@ export const createRPCHandle = <R extends Router>({
 			);
 			const data = await handler.parse(await event.request.clone().formData());
 			const result = await handler.call(event, data);
-			console.log(
-				'result instanceof ReadableStream',
-				result instanceof ReadableStream,
-				result.constructor.name
-			);
 			if (result.constructor.name === 'ReadableStream') {
-				const streamReader = result.getReader();
-				const stream = new ReadableStream({
-					start(controller) {
-						const push = async () => {
-							const { done, value } = await streamReader.read();
-							if (done) {
-								controller.close();
-								return;
-							}
-							controller.enqueue(value);
-							push();
-						};
-						push();
-					}
-				});
-				return new Response(stream, {
+				return new Response(result, {
 					headers: { 'Content-Type': 'text/event-stream' }
 				});
 			} else {

@@ -131,6 +131,8 @@ export const api = createRPCClient<AppRouter>({
 ### Streamed response
 
 Svelte-rpc can handle streamed response from the server. This is useful when you want to stream the response of an AI model for example. The only difference is that you need to pass a callback to the call function that will be called each time a chunk of the response is received.
+You can either use the stream helper or the ReadableStream directly.
+The stream helper is useful when you want to handle the stream response lifecycle by adding callbacks to the onChunk, onEnd and onStart events.
 
 ```ts
 // src/routers/ai.ts
@@ -156,6 +158,29 @@ export const aiRouter = {
 				stream: true
 			});
 			return completion.toReadableStream() as ReadableStream<OpenAI.ChatCompletionChunk>;
+		})
+	chatWithStreamHelper: procedure()
+		.input(string())
+		.handle(async ({ input }) => {
+			const completion = await openai.chat.completions.create({
+				model: 'gpt-3.5-turbo',
+				messages: [
+					{ role: 'system', content: 'You are a helpful assistant.' },
+					{ role: 'user', content: input }
+				],
+				stream: true
+			});
+			return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
+				onStart: () => {
+					console.log('AI stream started');
+				},
+				onChunk: ({ chunk, first }) => {
+					console.log('AI chunk received', chunk, first);
+				},
+				onEnd: (chunks) => {
+					console.log('AI stream ended', chunks);
+				}
+			});
 		})
 } satisfies Router;
 ```

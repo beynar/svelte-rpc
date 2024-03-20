@@ -1,4 +1,4 @@
-import { objectToFormData } from './utils.js';
+import { objectToFormData, tryParse } from './utils.js';
 import type { API, MaybePromise, Router, StreamCallback } from './types.js';
 
 export const createRecursiveProxy = (
@@ -25,16 +25,6 @@ export const createRecursiveProxy = (
 	return proxy;
 };
 
-const tryParse = (data: unknown) => {
-	if (typeof data !== 'string') {
-		return data;
-	}
-	try {
-		return JSON.parse(data);
-	} catch (e) {
-		return data;
-	}
-};
 export const createRPCClient = <R extends Router>(
 	{
 		endpoint = '/api',
