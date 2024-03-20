@@ -125,7 +125,7 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const objectToFormData = (payload: any, formData: FormData = new FormData()) => {
-	if (!payload) return formData;
+	if (payload === undefined) return formData;
 	if (!isObject(payload)) {
 		processFormData({ '######ROOT######': payload }, formData);
 	} else {
