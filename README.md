@@ -1,7 +1,7 @@
 # svelte-rpc
 
 Simple end-to-end type safety for SvelteKit.
-Lightweight and simpler alternative to TRPC.
+Lightweight and simpler alternative to [TRPC](https://github.com/trpc/trpc).
 
 ## Why ?
 
@@ -21,11 +21,11 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 - Can be called from server side thanks to the caller function placed inside your locals object
 - Middleware support that populate the ctx object received by the handle function
 
-## Drawbacks
+## Caveats
 
-- Only use FormData and Post request
+- Only POST request and FormData (don't worry, you still use plain javascript object, svelte-rpc will handle the conversion under the hood)
 - No subscriptions
-- Only works with Valibot (for now ?)
+- Only works with [Valibot](https://github.com/fabian-hiller/valibot) to handle schema validation (for now ?)
 
 ## Install
 
@@ -218,6 +218,8 @@ export const aiRouter = {
 
 Svelte-rpc exports two inference helpers to help you infer the type of the input and output of a procedure.
 I usually prefer to let them globally available in my project using the app.d.ts file.
+
+It is a bit cumbersome, just copy paste it and change the path of the file where the AppRouter is defined if needed.
 
 ```ts
 // app.d.ts
