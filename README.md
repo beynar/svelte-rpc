@@ -131,7 +131,9 @@ export const api = createRPCClient<AppRouter>({
 ### Streamed response
 
 Svelte-rpc can handle streamed response from the server. This is useful when you want to stream the response of an AI model for example. The only difference is that you need to pass a callback to the call function that will be called each time a chunk of the response is received.
+
 You can either use the stream helper or the ReadableStream directly.
+
 The stream helper is useful when you want to handle the stream response lifecycle by adding callbacks to the onChunk, onEnd and onStart events.
 
 ```ts
