@@ -4,6 +4,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { date, object, string } from 'valibot';
 import OpenAI from 'openai';
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
+import { z } from 'zod';
 const openai = new OpenAI({
 	apiKey: PRIVATE_OPEN_API_KEY
 });
@@ -13,7 +14,7 @@ const router = {
 		return { data: true };
 	}),
 	ai: procedure()
-		.input(string())
+		.input(z.string())
 		.handle(async ({ input }) => {
 			const completion = await openai.chat.completions.create({
 				model: 'gpt-3.5-turbo',

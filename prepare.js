@@ -27,6 +27,6 @@ function mangleFilesInFolders(dirPath) {
 	});
 }
 
-fs.rmSync('./dist/types.js');
-fs.writeFileSync('./dist/index.js', `"use strict";export*from"./server.js";`);
-mangleFilesInFolders('./dist');
+// fs.rmSync('./dist/types.js');
+// fs.writeFileSync('./dist/index.js', `"use strict";export*from"./server.js";`);
+// mangleFilesInFolders('./dist');

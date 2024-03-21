@@ -23,9 +23,10 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 
 ## Caveats
 
-- Only POST request and FormData (don't worry, you still use plain javascript object, svelte-rpc will handle the conversion under the hood)
+- Use only POST request.
+- Use FormData to send request from the client (don't worry, you still use plain javascript object, svelte-rpc will handle the conversion under the hood). But if the procedure receive a json object, it will handle it as is whatsoever.
 - No subscriptions
-- Only works with [Valibot](https://github.com/fabian-hiller/valibot) to handle schema validation (for now ?)
+- Only works with [Valibot](https://github.com/fabian-hiller/valibot) and [Zod](https://github.com/colinhacks/zod).
 
 ## Install
 
@@ -253,7 +254,7 @@ export {};
 </script>
 ```
 
-#### File schema
+<!-- #### File schema
 
 Svelte-rpc exports a file schema to handle file uploads. It is a simple wrapper around valibot
 
@@ -264,4 +265,4 @@ const imageSchema = file({
   mimeType: ['image/png', 'image/jpeg'],
   maxSize: 1024 * 1024 * 5
 });
-```
+``` -->

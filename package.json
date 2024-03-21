@@ -59,7 +59,8 @@
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",
 		"vite": "^5.0.11",
-		"vitest": "^1.2.0"
+		"vitest": "^1.2.0",
+		"zod": "^3.22.4"
 	},
 	"types": "./dist/index.d.ts",
 	"type": "module",

@@ -3,8 +3,8 @@
 	const test = async () => {
 		type ReturnType = InferRPCReturnType<'route'>;
 		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test('').then((res) => {
-			console.log(res.data);
+		const res = await api.test.test('ea').then((res) => {
+			console.log(res);
 			return res;
 		});
 	};

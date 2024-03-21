@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { instance, maxSize as ms, mimeType as mt } from 'valibot';
 const isObject = (value: unknown) =>
 	value &&
 	typeof value === 'object' &&
@@ -18,29 +17,22 @@ const isDate = (value: unknown): value is Date => value instanceof Date;
 const isNumber = (value: unknown): value is number =>
 	typeof value === 'number' || !isNaN(Number(value));
 
-const TYPES_MAP = {
-	string: 0,
-	number: 1,
-	boolean: 2,
-	date: 3,
-	object: 4,
-	array: 5,
-	null: 6,
-	undefined: 7,
-	blob: 8,
-	file: 9
-};
+const TYPES_MAP = new Map<string, string>(
+	Object.entries({
+		string: '0',
+		number: '1',
+		boolean: '2',
+		date: '3',
+		object: '4',
+		array: '5',
+		null: '6',
+		undefined: '7',
+		blob: '8',
+		file: '9'
+	})
+);
 
-const REVERSE_TYPES_MAP = {
-	'0': 'string',
-	'1': 'number',
-	'2': 'boolean',
-	'3': 'date',
-	'6': 'null',
-	'7': 'undefined',
-	'8': 'blob',
-	'9': 'file'
-};
+const REVERSE_TYPES_MAP = new Map<string, string>([...TYPES_MAP].map(([a, b]) => [b, a]));
 
 const processFormData = (value: any, formData: FormData, parent?: string) => {
 	const processedKey = parent || '';
@@ -67,115 +59,55 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 											: undefined;
 	if (!type) throw new Error('Invalid type');
 
-	const typeIndex = TYPES_MAP[type];
-	switch (type) {
-		case 'string': {
-			formData.append(`${typeIndex}:${processedKey}`, value);
-			break;
-		}
-		case 'number': {
-			formData.append(`${typeIndex}:${processedKey}`, value);
-			break;
-		}
-		case 'boolean': {
-			formData.append(`${typeIndex}:${processedKey}`, value ? 'true' : 'false');
-			break;
-		}
-		case 'object': {
-			Object.entries(value).forEach(([key, data]) => {
-				let computedKey = key;
-				if (parent) {
-					computedKey = `${parent}.${key}`;
-				}
-				processFormData(data, formData, computedKey);
-			});
-			break;
-		}
-		case 'array': {
-			value.forEach((item: unknown, index: number) => {
-				const computedKey = processedKey + `[${index}]`;
-				processFormData(item, formData, computedKey);
-			});
-			break;
-		}
-		case 'null': {
-			formData.append(`${typeIndex}:${processedKey}`, '');
-
-			break;
-		}
-		case 'undefined': {
-			formData.append(`${typeIndex}:${processedKey}`, '');
-
-			break;
-		}
-		case 'blob': {
-			formData.append(`${typeIndex}:${processedKey}`, value);
-			break;
-		}
-		case 'date': {
-			formData.append(`${typeIndex}:${processedKey}`, value.toISOString());
-			break;
-		}
-		case 'file': {
-			formData.append(`${typeIndex}:${processedKey}`, value);
-			break;
-		}
+	const typeIndex = TYPES_MAP.get(type);
+	if (type === 'string' || type === 'number' || type === 'boolean') {
+		formData.append(`${typeIndex}:${processedKey}`, String(value));
+	} else if (type === 'object') {
+		Object.entries(value).forEach(([key, data]) => {
+			processFormData(data, formData, parent ? `${parent}.${key}` : key);
+		});
+	} else if (type === 'array') {
+		value.forEach((item: unknown, index: number) => {
+			processFormData(item, formData, processedKey + `[${index}]`);
+		});
+	} else if (type === 'null' || type === 'undefined') {
+		formData.append(`${typeIndex}:${processedKey}`, '');
+	} else if (type === 'date') {
+		formData.append(`${typeIndex}:${processedKey}`, value.toISOString());
+	} else if (type === 'blob' || type === 'file') {
+		formData.append(`${typeIndex}:${processedKey}`, value);
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const objectToFormData = (payload: any, formData: FormData = new FormData()) => {
 	if (payload === undefined) return formData;
-	if (!isObject(payload)) {
-		processFormData({ '######ROOT######': payload }, formData);
-	} else {
-		processFormData(payload, formData);
-	}
+	processFormData(!isObject(payload) ? { '######ROOT######': payload } : payload, formData);
 	return formData;
 };
 
-export const formDataToObject = (formData: FormData) => {
+export const formDataToObject = (formData: FormData | any) => {
+	if (!(formData instanceof FormData)) {
+		return formData;
+	}
 	const obj = {};
 	formData.forEach((value, key_type) => {
 		let transformedValue = value as any;
 		const [typeIndex, key] = key_type.split(':');
-		if (typeIndex in REVERSE_TYPES_MAP) {
-			const type = REVERSE_TYPES_MAP[typeIndex as keyof typeof REVERSE_TYPES_MAP];
+		const type = REVERSE_TYPES_MAP.get(typeIndex);
 
-			switch (type) {
-				case 'string': {
-					transformedValue = value.toString();
-					break;
-				}
-				case 'number': {
-					transformedValue = Number(value);
-					break;
-				}
-				case 'boolean': {
-					transformedValue = value === 'true';
-					break;
-				}
-				case 'blob': {
-					transformedValue = value as Blob;
-					break;
-				}
-				case 'file': {
-					transformedValue = value as File;
-					break;
-				}
-				case 'date': {
-					transformedValue = new Date(value as string);
-					break;
-				}
-				case 'null': {
-					transformedValue = null;
-					break;
-				}
-				case 'undefined': {
-					transformedValue = undefined;
-					break;
-				}
+		if (type) {
+			if (type === 'number') {
+				transformedValue = Number(value);
+			} else if (type === 'boolean') {
+				transformedValue = value === 'true';
+			} else if (type === 'date') {
+				transformedValue = new Date(value as string);
+			} else if (type === 'null') {
+				transformedValue = null;
+			} else if (type === 'undefined') {
+				transformedValue = undefined;
 			}
+
 			const isNested = key.includes('[') || key.includes('.');
 			if (isNested) {
 				set(obj, key, transformedValue);
@@ -192,21 +124,16 @@ export const formDataToObject = (formData: FormData) => {
 
 export function set<T, V>(obj: T, path: string | string[], value: V): T {
 	if (typeof path === 'string') {
-		// Split the path by dot and brackets
 		path = path.replace(/\[(\w+)\]/g, '.$1').split('.');
 	}
-
 	let current: any = obj;
-
 	for (let i = 0; i < path.length; i++) {
 		const key: keyof any = path[i];
 		if (i === path.length - 1) {
 			current[key] = value;
 		} else {
 			if (current[key] === undefined) {
-				// Check if the next path segment is a number (array index)
-				const nextKey: keyof any = path[i + 1];
-				current[key] = /^\d+$/.test(nextKey) ? [] : {};
+				current[key] = /^\d+$/.test(path[i + 1]) ? [] : {};
 			}
 			current = current[key];
 		}
@@ -215,20 +142,9 @@ export function set<T, V>(obj: T, path: string | string[], value: V): T {
 	return obj;
 }
 
-export const file = ({
-	mimeType,
-	maxSize = 1024 * 1024 * 10
-}: {
-	mimeType: `${string}/${string}`[];
-	maxSize: number;
-}) => instance(File, [mt(mimeType), ms(maxSize)]);
-
 export const tryParse = <C>(data: unknown) => {
-	if (typeof data !== 'string') {
-		return data as C;
-	}
 	try {
-		return JSON.parse(data) as C;
+		return (typeof data !== 'string' ? data : JSON.parse(data)) as C;
 	} catch (e) {
 		return data as C;
 	}

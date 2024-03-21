@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { RequestEvent } from '@sveltejs/kit';
-import { type Input, type BaseSchema } from 'valibot';
+import type { Input, BaseSchema as VSchema } from 'valibot';
+import type { Schema as ZSchema, infer as ZInfer } from 'zod';
+export type Schema = ZSchema | VSchema;
+export type SchemaInput<S extends Schema> = S extends ZSchema
+	? ZInfer<S>
+	: S extends VSchema
+		? Input<S>
+		: never;
 
 export type StreamsCallbacks<C> = {
 	onStart?: () => MaybePromise<void>;
@@ -66,16 +73,17 @@ export type ReturnOfMiddlewares<
 	: unknown;
 
 export type HandlePayload<
-	S extends BaseSchema | undefined,
+	S extends Schema | undefined,
 	Use extends Middleware[] | undefined
-> = (S extends BaseSchema ? { event: RequestEvent; input: Input<S> } : { event: RequestEvent }) & {
+> = (S extends Schema
+	? { event: RequestEvent; input: SchemaInput<S> }
+	: { event: RequestEvent }) & {
 	ctx: ReturnOfMiddlewares<Use>;
 };
 
-export type HandleFunction<
-	S extends BaseSchema | undefined,
-	Use extends Middleware[] | undefined
-> = (payload: HandlePayload<S, Use>) => MaybePromise<any>;
+export type HandleFunction<S extends Schema | undefined, Use extends Middleware[] | undefined> = (
+	payload: HandlePayload<S, Use>
+) => MaybePromise<any>;
 
 export type RouterPaths<R extends Router, P extends string = ''> = {
 	[K in keyof R]: R[K] extends Router

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type RequestEvent, type Handle as SvelteKitHandle, json, error } from '@sveltejs/kit';
-import { type Input, type BaseSchema, parse, ValiError, type MaybePromise } from 'valibot';
-import { formDataToObject, file, tryParse } from './utils.js';
-
+import type { BaseSchema as VSchema } from 'valibot';
+import { formDataToObject, tryParse } from './utils.js';
 import type {
 	API,
 	HandleFunction,
@@ -12,9 +11,12 @@ import type {
 	PreparedHandler,
 	ReturnOfMiddlewares,
 	Router,
+	Schema,
+	SchemaInput,
 	StreamsCallbacks
 } from './types.js';
 import { createRecursiveProxy } from './client.js';
+import type { Schema as Zschema } from 'zod';
 
 const getHandler = (router: Router, path: string[]) => {
 	let handler: Router | PreparedHandler | undefined = router;
@@ -30,6 +32,13 @@ const getHandler = (router: Router, path: string[]) => {
 	}
 };
 
+const isZod = (schema: Schema): schema is Zschema => {
+	return (schema as Zschema).safeParse !== undefined;
+};
+const isVali = (schema: Schema): schema is VSchema => {
+	return (schema as VSchema)._parse !== undefined;
+};
+
 const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 	return createRecursiveProxy(async (opts) => {
 		const {
@@ -37,7 +46,7 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 			args: [data]
 		} = opts;
 		const handler = getHandler(router, path);
-		const parsedData = await handler.parse(data, true);
+		const parsedData = await handler.parse(data);
 		return handler.call(event, parsedData);
 	}, []) as API<R>;
 };
@@ -91,7 +100,11 @@ export const createRPCHandle = <R extends Router>({
 				router,
 				event.url.pathname.split('/').slice(endpoint.split('/').length)
 			);
-			const data = await handler.parse(await event.request.clone().formData());
+			const isFormData = event.request.headers.get('content-type')?.includes('multipart/form-data');
+			const payload = isFormData
+				? await event.request.clone().formData()
+				: await event.request.clone().json();
+			const data = await handler.parse(payload);
 			const result = await handler.call(event, data);
 			if (result.constructor.name === 'ReadableStream') {
 				return new Response(result, {
@@ -109,14 +122,14 @@ export const createRPCHandle = <R extends Router>({
 class Procedure<Use extends Middleware[]> {
 	#middlewares: Use;
 	#createHandler =
-		<S extends BaseSchema | undefined>(schema: S) =>
+		<S extends Schema | undefined>(schema: S) =>
 		<H extends HandleFunction<S, Use>>(handler: H) => {
 			return new Handler(handler, schema, this.#middlewares);
 		};
 	constructor(...middlewares: Use) {
 		this.#middlewares = middlewares;
 	}
-	input = <S extends BaseSchema>(schema: S) => {
+	input = <S extends Schema>(schema: S) => {
 		return {
 			handle: this.#createHandler(schema)
 		};
@@ -125,7 +138,7 @@ class Procedure<Use extends Middleware[]> {
 }
 
 export class Handler<
-	S extends BaseSchema | undefined,
+	S extends Schema | undefined,
 	H extends HandleFunction<S, Use>,
 	Use extends Middleware[] | undefined
 > {
@@ -138,18 +151,36 @@ export class Handler<
 		this.#handler = handler;
 		this.#middlewares = middlewares;
 	}
-	parse = (data: any, raw?: boolean) => {
-		if (!this.#schema) {
+	parse = async (data: any) => {
+		if (this.#schema === undefined) {
 			return undefined;
-		}
-		try {
-			return parse(this.#schema, raw ? data : formDataToObject(data));
-		} catch (e) {
-			if (e instanceof ValiError) {
-				return error(
-					400,
-					`${e.issues.map((issue) => `${issue.message} at: ${issue.path?.map((p) => p.key).join('.')}`).join('\n')}`
-				);
+		} else {
+			if (isZod(this.#schema)) {
+				console.log('zod');
+
+				const parseResult = this.#schema.safeParse(formDataToObject(data));
+				if (parseResult.success) {
+					return parseResult.data;
+				} else {
+					error(
+						400,
+						parseResult.error.issues
+							.map((issue) => `${issue.message} at: ${issue.path?.map((p) => p).join('.')}`)
+							.join('\n')
+					);
+				}
+			} else if (isVali(this.#schema)) {
+				const { output, issues } = this.#schema._parse(formDataToObject(data));
+				if (issues) {
+					error(
+						400,
+						issues
+							.map((issue) => `${issue.message} at: ${issue.path?.map((p) => p.key).join('.')}`)
+							.join('\n')
+					);
+				} else {
+					return output;
+				}
 			}
 		}
 	};
@@ -168,7 +199,7 @@ export class Handler<
 	};
 	call = async (
 		event: RequestEvent,
-		input: S extends BaseSchema ? Input<S> : undefined
+		input: S extends Schema ? SchemaInput<S> : undefined
 	): Promise<ReturnType<H>> => {
 		const ctx = await this.#useMiddlewares(event);
 		const payload = { event, input, ctx } as HandlePayload<any, any>;
@@ -179,4 +210,3 @@ export class Handler<
 export const procedure = <Use extends Middleware[]>(...middlewares: Use) => {
 	return new Procedure(...middlewares);
 };
-export { file };
