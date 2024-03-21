@@ -12,9 +12,10 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 - Same type safety as TRPC
 - Familiar syntax to define procedures
 - Simpler api (no .mutate, .query) just call the procedure itself
+- Works with [Valibot](https://github.com/fabian-hiller/valibot) and [Zod](https://github.com/colinhacks/zod).
 - Ability to handle file uploads
 - Type safe streamed response
-- Very tiny
+- Very tiny, client and server are both under 2kb gzipped
 - You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
 - Simple to implement: a hook, a router and a client that infer its type from the router
 - Infinite and simple nesting of procedures
@@ -23,10 +24,9 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 
 ## Caveats
 
-- Use only POST request.
+- Use only POST request from the client.
 - Use FormData to send request from the client (don't worry, you still use plain javascript object, svelte-rpc will handle the conversion under the hood). But if the procedure receive a json object, it will handle it as is whatsoever.
 - No subscriptions
-- Only works with [Valibot](https://github.com/fabian-hiller/valibot) and [Zod](https://github.com/colinhacks/zod).
 
 ## Install
 

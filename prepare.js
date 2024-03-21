@@ -1,7 +1,7 @@
 import esbuild from 'esbuild';
 import path from 'path';
 import dir from 'node-dir';
-import fs from 'node:fs';
+
 function minifyFile(inputFile, outputFile) {
 	esbuild
 		.build({
@@ -29,4 +29,4 @@ function mangleFilesInFolders(dirPath) {
 
 // fs.rmSync('./dist/types.js');
 // fs.writeFileSync('./dist/index.js', `"use strict";export*from"./server.js";`);
-// mangleFilesInFolders('./dist');
+mangleFilesInFolders('./dist');
