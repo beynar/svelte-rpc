@@ -21,6 +21,24 @@ const router = {
 		});
 		return { data: true };
 	}),
+	complex: procedure()
+		.input(
+			z.object({
+				title: z.string(),
+				description: z.string(),
+				folderId: z.string().optional(),
+				tags: z.array(
+					z.object({
+						id: z.string(),
+						label: z.string()
+					})
+				),
+				type: z.enum(['PDF', 'AUDIO', 'CHAT'])
+			})
+		)
+		.handle(async ({ input }) => {
+			return input;
+		}),
 	ai: procedure()
 		.input(z.string())
 		.handle(async ({ input }) => {

@@ -63,13 +63,22 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 	if (type === 'string' || type === 'number' || type === 'boolean') {
 		formData.append(`${typeIndex}:${processedKey}`, String(value));
 	} else if (type === 'object') {
-		Object.entries(value).forEach(([key, data]) => {
-			processFormData(data, formData, parent ? `${parent}.${key}` : key);
-		});
+		const entries = Object.entries(value);
+		if (entries.length === 0) {
+			formData.append(`${typeIndex}:${processedKey}`, '{}');
+		} else {
+			entries.forEach(([key, data]) => {
+				processFormData(data, formData, parent ? `${parent}.${key}` : key);
+			});
+		}
 	} else if (type === 'array') {
-		value.forEach((item: unknown, index: number) => {
-			processFormData(item, formData, processedKey + `[${index}]`);
-		});
+		if (value.length === 0) {
+			formData.append(`${typeIndex}:${processedKey}`, '[]');
+		} else {
+			value.forEach((item: unknown, index: number) => {
+				processFormData(item, formData, processedKey + `[${index}]`);
+			});
+		}
 	} else if (type === 'null' || type === 'undefined') {
 		formData.append(`${typeIndex}:${processedKey}`, '');
 	} else if (type === 'date') {
@@ -106,6 +115,10 @@ export const formDataToObject = (formData: FormData | any) => {
 				transformedValue = null;
 			} else if (type === 'undefined') {
 				transformedValue = undefined;
+			} else if (type === 'array' && value === '[]') {
+				transformedValue = [];
+			} else if (type === 'object' && value === '{}') {
+				transformedValue = {};
 			}
 
 			const isNested = key.includes('[') || key.includes('.');
