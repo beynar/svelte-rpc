@@ -5,7 +5,7 @@ Lightweight and simpler alternative to [TRPC](https://github.com/trpc/trpc).
 
 ## Why ?
 
-I needed to stay inside the SvelteKit realm to use cookies.set and other shenanigans inside my procedures, to handle file uploads and a typesafe way to receive streamed response from AI models. But I wanted the same DX and type safety as TRPC. So I created svelte-rpc.
+I needed to use cookies methods inside my procedures, to handle file uploads and a typesafe way to receive streamed response from AI models. But I wanted the same DX and type safety as TRPC. So I created svelte-rpc.
 
 ## Benefits
 
@@ -16,7 +16,7 @@ I needed to stay inside the SvelteKit realm to use cookies.set and other shenani
 - Ability to handle file uploads
 - Type safe streamed response
 - Very tiny, client and server are both under 2kb gzipped
-- You stay in the SvelteKit realm, so you can use cookies, error and other server side stuff of SvelteKit
+- Can set and delete cookies inside the procedures
 - Simple to implement: a hook, a router and a client that infer its type from the router
 - Infinite and simple nesting of procedures
 - Can be called from server side thanks to the caller function placed inside your locals object
