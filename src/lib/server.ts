@@ -3,6 +3,7 @@
 import { type RequestEvent, type Handle as SvelteKitHandle, json, error } from '@sveltejs/kit';
 import type { BaseSchema as VSchema } from 'valibot';
 import { formDataToObject, tryParse } from './utils.js';
+import type { CookieSerializeOptions } from 'cookie';
 import type {
 	API,
 	HandleFunction,
@@ -100,6 +101,22 @@ export const createRPCHandle = <R extends Router>({
 				router,
 				event.url.pathname.split('/').slice(endpoint.split('/').length)
 			);
+			const cookies: {
+				name: string;
+				value: string;
+				opts: CookieSerializeOptions & {
+					path: string;
+				};
+			}[] = [];
+			event.cookies.set = (
+				name: string,
+				value: string,
+				opts: CookieSerializeOptions & {
+					path: string;
+				}
+			) => {
+				cookies.push({ name, value, opts });
+			};
 			const isFormData = event.request.headers.get('content-type')?.includes('multipart/form-data');
 			const payload = isFormData
 				? await event.request.clone().formData()
@@ -111,7 +128,13 @@ export const createRPCHandle = <R extends Router>({
 					headers: { 'Content-Type': 'text/event-stream' }
 				});
 			} else {
-				return json(result);
+				return json(result, {
+					headers: {
+						'Set-Cookie': cookies
+							.map(({ name, value, opts }) => event.cookies.serialize(name, value, opts))
+							.join('; ')
+					}
+				});
 			}
 		}
 

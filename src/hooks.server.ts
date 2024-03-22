@@ -10,7 +10,15 @@ const openai = new OpenAI({
 });
 
 const router = {
-	route: procedure().handle(async () => {
+	route: procedure().handle(async ({ event }) => {
+		event.cookies.set('test', new Date().toISOString(), {
+			path: '/',
+			maxAge: 60 * 60 * 24 * 7,
+			sameSite: 'lax',
+			domain: 'localhost',
+			secure: false,
+			httpOnly: false
+		});
 		return { data: true };
 	}),
 	ai: procedure()
@@ -53,6 +61,6 @@ const router = {
 
 export type AppRouter = typeof router;
 export const handle = sequence(
-	createRPCHandle({ router }),
-	createRPCHandle({ router, endpoint: false, localsApiKey: 'admin' })
+	createRPCHandle({ router })
+	// createRPCHandle({ router, endpoint: false, localsApiKey: 'admin' })
 );
