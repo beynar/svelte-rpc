@@ -117,6 +117,9 @@ export const createRPCHandle = <R extends Router>({
 			) => {
 				cookies.push({ name, value, opts });
 			};
+			event.cookies.delete = (name: string) => {
+				cookies.push({ name, value: '', opts: { path: '/', maxAge: -1 } });
+			};
 			const isFormData = event.request.headers.get('content-type')?.includes('multipart/form-data');
 			const payload = isFormData
 				? await event.request.clone().formData()
