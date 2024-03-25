@@ -126,18 +126,28 @@ export const createRPCHandle = <R extends Router>({
 				: await event.request.clone().json();
 			const data = await handler.parse(payload);
 			const result = await handler.call(event, data);
-			if (result.constructor.name === 'ReadableStream') {
+			if (result?.constructor.name === 'ReadableStream') {
 				return new Response(result, {
 					headers: { 'Content-Type': 'text/event-stream' }
 				});
-			} else {
-				return json(result, {
+			} else if (result && result instanceof File) {
+				return new Response(result, {
 					headers: {
-						'Set-Cookie': cookies
-							.map(({ name, value, opts }) => event.cookies.serialize(name, value, opts))
-							.join('; ')
+						'Content-Type': result.type,
+						'Content-Disposition': 'attachment; filename=' + result.name
 					}
 				});
+			} else {
+				return json(
+					{ result },
+					{
+						headers: {
+							'Set-Cookie': cookies
+								.map(({ name, value, opts }) => event.cookies.serialize(name, value, opts))
+								.join('; ')
+						}
+					}
+				);
 			}
 		}
 

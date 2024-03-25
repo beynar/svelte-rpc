@@ -3,18 +3,10 @@
 	const test = async () => {
 		type ReturnType = InferRPCReturnType<'route'>;
 		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api
-			.complex({
-				description: 'eazea',
-				tags: [],
-				title: 'eza',
-				type: 'AUDIO',
-				folderId: undefined
-			})
-			.then((res) => {
-				console.log(res);
-				return res;
-			});
+		const res = await api.test.test('string').then((res) => {
+			console.log(res);
+			return res;
+		});
 	};
 
 	const testError = async () => {

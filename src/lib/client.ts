@@ -83,13 +83,18 @@ export const createRPCClient = <R extends Router>(
 					}
 					callback(decoder.decode(value), done);
 				}
-			} else {
-				const result = await res.json();
+			} else if (res.headers.get('content-type') === 'application/json') {
+				const { result } = await res.json();
 				if (res.ok) {
 					return result;
 				} else {
 					onError(result as App.Error);
 				}
+			} else if (res.headers.get('content-disposition')?.includes('filename')) {
+				return new File(
+					[await res.blob()],
+					res.headers.get('content-disposition')?.split('filename=')[1] || 'file'
+				);
 			}
 		});
 	}, []) as API<R>;

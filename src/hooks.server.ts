@@ -67,7 +67,7 @@ const router = {
 		test: procedure()
 			.input(string())
 			.handle(async () => {
-				return { data: true };
+				return undefined;
 			}),
 		test2: procedure()
 			.input(object({ test: string(), image: date() }))
