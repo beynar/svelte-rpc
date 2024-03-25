@@ -17,19 +17,19 @@ export type StreamsCallbacks<C> = {
 };
 export type PreparedHandler = {
 	call: Caller;
-	parse: (data: any, raw?: boolean) => MaybePromise<any>;
+	parse: (data: any) => MaybePromise<any>;
 };
 export type Router = {
 	[K: string]: PreparedHandler | Router;
 };
-export type API<R extends Router> = {
+export type API<R extends Router = Router> = {
 	[K in keyof R]: R[K] extends Router
 		? APIRoute<R[K]>
 		: R[K] extends PreparedHandler
 			? PreparedHandlerType<R[K]>
 			: never;
 };
-type Caller = (event: RequestEvent, input: any) => MaybePromise<any>;
+type Caller = (event: any, input: any) => MaybePromise<any>;
 type ReturnTypeOfCaller<C extends Caller> =
 	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Promise<Awaited<ReturnType<C>>>;
 
@@ -57,7 +57,7 @@ export type APIRoute<R extends Router> = {
 			? PreparedHandlerType<R[K]>
 			: never;
 };
-export type Middleware<T = any> = (event: RequestEvent) => MaybePromise<T>;
+export type Middleware<T = any> = (event: SafeRequestEvent) => MaybePromise<T>;
 
 export type ReturnOfMiddlewares<
 	Use extends Middleware[] | undefined,
@@ -76,8 +76,8 @@ export type HandlePayload<
 	S extends Schema | undefined,
 	Use extends Middleware[] | undefined
 > = (S extends Schema
-	? { event: RequestEvent; input: SchemaInput<S> }
-	: { event: RequestEvent }) & {
+	? { event: SafeRequestEvent; input: SchemaInput<S> }
+	: { event: SafeRequestEvent }) & {
 	ctx: ReturnOfMiddlewares<Use>;
 };
 
@@ -112,3 +112,10 @@ export type ReturnTypeOfProcedure<R extends Router, P extends RouterPaths<R>> =
 
 export type InputOfProcedure<R extends Router, P extends RouterPaths<R>> =
 	Procedures<R, P> extends PreparedHandler ? Parameters<Procedures<R, P>['call']>[1] : never;
+
+import type { ConditionalExcept } from 'type-fest';
+
+export type SafeRequestEvent2 = RequestEvent;
+export type SafeRequestEvent = Omit<RequestEvent, 'locals'> & {
+	locals: ConditionalExcept<App.Locals, API>;
+};

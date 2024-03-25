@@ -4,6 +4,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
+			test: boolean;
 			api: import('$lib/types.js').API<import('./hooks.server.js').AppRouter>;
 		}
 		// interface PageData {}

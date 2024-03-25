@@ -12,6 +12,7 @@ import type {
 	PreparedHandler,
 	ReturnOfMiddlewares,
 	Router,
+	SafeRequestEvent,
 	Schema,
 	SchemaInput,
 	StreamsCallbacks
@@ -192,8 +193,6 @@ export class Handler<
 			return undefined;
 		} else {
 			if (isZod(this.#schema)) {
-				console.log('zod');
-
 				const parseResult = this.#schema.safeParse(formDataToObject(data));
 				if (parseResult.success) {
 					return parseResult.data;
@@ -221,7 +220,7 @@ export class Handler<
 		}
 	};
 
-	#useMiddlewares = async (event: RequestEvent): Promise<ReturnOfMiddlewares<Use>> => {
+	#useMiddlewares = async (event: SafeRequestEvent): Promise<ReturnOfMiddlewares<Use>> => {
 		if (!this.#middlewares) {
 			return undefined as ReturnOfMiddlewares<Use>;
 		}
