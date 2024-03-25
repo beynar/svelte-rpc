@@ -6,7 +6,7 @@
 
 ### 🩹 Fixes
 
-- 🐛  Remove API types from locals in procedure request event. ([fd33fd3](https://github.com/beynar/svelte-rpc/commit/fd33fd3))
+- 🐛 Remove API types from locals in procedure request event. ([fd33fd3](https://github.com/beynar/svelte-rpc/commit/fd33fd3))
 
 ### 🏡 Chore
 

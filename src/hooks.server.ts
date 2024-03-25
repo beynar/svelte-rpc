@@ -41,8 +41,7 @@ const router = {
 		}),
 	ai: procedure()
 		.input(z.string())
-		.handle(async ({ input, event }) => {
-			event.locals.api.test.test('e');
+		.handle(async ({ input }) => {
 			const completion = await openai.chat.completions.create({
 				model: 'gpt-3.5-turbo',
 				max_tokens: 4,
