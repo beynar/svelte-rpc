@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+const isSvelteState = (value: unknown) =>
+	Object.getOwnPropertySymbols(value).some((s) => s.toString() === 'Symbol($state)');
 const isObject = (value: unknown) =>
 	value &&
 	typeof value === 'object' &&
@@ -6,6 +8,7 @@ const isObject = (value: unknown) =>
 	!Array.isArray(value) &&
 	typeof value !== 'function' &&
 	!(value instanceof Date);
+
 const isArray = (value: unknown): value is Array<unknown> => Array.isArray(value);
 const isBlob = (value: unknown): value is Blob => value instanceof Blob;
 const isFile = (value: unknown): value is File => value instanceof File;
@@ -35,6 +38,10 @@ const TYPES_MAP = new Map<string, string>(
 const REVERSE_TYPES_MAP = new Map<string, string>([...TYPES_MAP].map(([a, b]) => [b, a]));
 
 const processFormData = (value: any, formData: FormData, parent?: string) => {
+	if (isSvelteState(value)) {
+		value = Object.assign({}, value);
+	}
+
 	const processedKey = parent || '';
 	const type = isDate(value)
 		? 'date'
@@ -57,40 +64,44 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 										: isNumber(value)
 											? 'number'
 											: undefined;
-	if (!type) throw new Error('Invalid type');
-
-	const typeIndex = TYPES_MAP.get(type);
-	if (type === 'string' || type === 'number' || type === 'boolean') {
-		formData.append(`${typeIndex}:${processedKey}`, String(value));
-	} else if (type === 'object') {
-		const entries = Object.entries(value);
-		if (entries.length === 0) {
-			formData.append(`${typeIndex}:${processedKey}`, '{}');
-		} else {
-			entries.forEach(([key, data]) => {
-				processFormData(data, formData, parent ? `${parent}.${key}` : key);
-			});
+	if (type) {
+		const typeIndex = TYPES_MAP.get(type);
+		if (type === 'string' || type === 'number' || type === 'boolean') {
+			formData.append(`${typeIndex}:${processedKey}`, String(value));
+		} else if (type === 'object') {
+			const entries = Object.entries(value);
+			if (entries.length === 0) {
+				formData.append(`${typeIndex}:${processedKey}`, '{}');
+			} else {
+				entries.forEach(([key, data]) => {
+					processFormData(data, formData, parent ? `${parent}.${key}` : key);
+				});
+			}
+		} else if (type === 'array') {
+			if (value.length === 0) {
+				formData.append(`${typeIndex}:${processedKey}`, '[]');
+			} else {
+				value.forEach((item: unknown, index: number) => {
+					processFormData(item, formData, processedKey + `[${index}]`);
+				});
+			}
+		} else if (type === 'null' || type === 'undefined') {
+			formData.append(`${typeIndex}:${processedKey}`, '');
+		} else if (type === 'date') {
+			formData.append(`${typeIndex}:${processedKey}`, value.toISOString());
+		} else if (type === 'blob' || type === 'file') {
+			formData.append(`${typeIndex}:${processedKey}`, value);
 		}
-	} else if (type === 'array') {
-		if (value.length === 0) {
-			formData.append(`${typeIndex}:${processedKey}`, '[]');
-		} else {
-			value.forEach((item: unknown, index: number) => {
-				processFormData(item, formData, processedKey + `[${index}]`);
-			});
-		}
-	} else if (type === 'null' || type === 'undefined') {
-		formData.append(`${typeIndex}:${processedKey}`, '');
-	} else if (type === 'date') {
-		formData.append(`${typeIndex}:${processedKey}`, value.toISOString());
-	} else if (type === 'blob' || type === 'file') {
-		formData.append(`${typeIndex}:${processedKey}`, value);
 	}
 };
 
-export const objectToFormData = (payload: any, formData: FormData = new FormData()) => {
+export const objectToFormData = (payload: object, formData: FormData = new FormData()) => {
 	if (payload === undefined) return formData;
-	processFormData(!isObject(payload) ? { '######ROOT######': payload } : payload, formData);
+
+	processFormData(
+		!isObject(payload) && !isSvelteState(payload) ? { '######ROOT######': payload } : payload,
+		formData
+	);
 	return formData;
 };
 

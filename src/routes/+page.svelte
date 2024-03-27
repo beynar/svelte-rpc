@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { api } from './api.js';
+	let st = $state('ee');
+	let object = $state({
+		image: new Date(),
+		test: 'st'
+	});
 	const test = async () => {
 		type ReturnType = InferRPCReturnType<'route'>;
 		type Payload = InferRPCInput<'test.test2'>;
-		const res = await api.test.test('string').then((res) => {
+
+		const res = await api.test.test(st).then((res) => {
 			console.log(res);
 			return res;
 		});

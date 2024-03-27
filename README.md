@@ -5,7 +5,7 @@ Lightweight and simpler alternative to [TRPC](https://github.com/trpc/trpc).
 
 ## Why ?
 
-I needed to use cookies methods inside my procedures, to handle file uploads and a typesafe way to receive streamed response from AI models. But I wanted the same DX and type safety as TRPC. So I created svelte-rpc.
+I needed to use cookies methods inside my procedures, to handle file uploads/downloadss and a typesafe way to receive streamed response from AI models. But I wanted the same DX and type safety as TRPC. So I created svelte-rpc.
 
 ## Benefits
 
@@ -15,6 +15,7 @@ I needed to use cookies methods inside my procedures, to handle file uploads and
 - Works with [Valibot](https://github.com/fabian-hiller/valibot) and [Zod](https://github.com/colinhacks/zod).
 - Ability to handle file uploads
 - Type safe streamed response
+- Type safe file download
 - Very tiny, client and server are both under 2kb gzipped
 - Can set and delete cookies inside the procedures
 - Simple to implement: a hook, a router and a client that infer its type from the router
