@@ -1,7 +1,7 @@
 import { createRPCHandle, procedure, stream } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
 import { sequence } from '@sveltejs/kit/hooks';
-import { date, object, string } from 'valibot';
+import { date, object, string, array } from 'valibot';
 import OpenAI from 'openai';
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
 import { z } from 'zod';
@@ -69,8 +69,13 @@ const router = {
 			.handle(async () => {
 				return { result: undefined };
 			}),
-		test2: procedure()
+		object: procedure()
 			.input(object({ test: string(), image: date() }))
+			.handle(async () => {
+				return { data: true };
+			}),
+		array: procedure()
+			.input(array(object({ test: string(), image: date() })))
 			.handle(async () => {
 				return { data: true };
 			})

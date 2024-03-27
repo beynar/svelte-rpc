@@ -205,6 +205,7 @@ export class Handler<
 					);
 				}
 			} else if (isVali(this.#schema)) {
+				console.log(formDataToObject(data));
 				const { output, issues } = this.#schema._parse(formDataToObject(data));
 				if (issues) {
 					error(

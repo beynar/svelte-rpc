@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const isSvelteState = (value: unknown) =>
-	Object.getOwnPropertySymbols(value).some((s) => s.toString() === 'Symbol($state)');
 const isObject = (value: unknown) =>
 	value &&
 	typeof value === 'object' &&
-	value.constructor === Object &&
 	!Array.isArray(value) &&
 	typeof value !== 'function' &&
 	!(value instanceof Date);
-
 const isArray = (value: unknown): value is Array<unknown> => Array.isArray(value);
 const isBlob = (value: unknown): value is Blob => value instanceof Blob;
 const isFile = (value: unknown): value is File => value instanceof File;
@@ -38,10 +34,6 @@ const TYPES_MAP = new Map<string, string>(
 const REVERSE_TYPES_MAP = new Map<string, string>([...TYPES_MAP].map(([a, b]) => [b, a]));
 
 const processFormData = (value: any, formData: FormData, parent?: string) => {
-	if (isSvelteState(value)) {
-		value = Object.assign({}, value);
-	}
-
 	const processedKey = parent || '';
 	const type = isDate(value)
 		? 'date'
@@ -64,12 +56,15 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 										: isNumber(value)
 											? 'number'
 											: undefined;
+
+	console.log({ type });
 	if (type) {
 		const typeIndex = TYPES_MAP.get(type);
 		if (type === 'string' || type === 'number' || type === 'boolean') {
 			formData.append(`${typeIndex}:${processedKey}`, String(value));
 		} else if (type === 'object') {
 			const entries = Object.entries(value);
+			console.log({ entries });
 			if (entries.length === 0) {
 				formData.append(`${typeIndex}:${processedKey}`, '{}');
 			} else {
@@ -95,13 +90,11 @@ const processFormData = (value: any, formData: FormData, parent?: string) => {
 	}
 };
 
-export const objectToFormData = (payload: object, formData: FormData = new FormData()) => {
-	if (payload === undefined) return formData;
-
-	processFormData(
-		!isObject(payload) && !isSvelteState(payload) ? { '######ROOT######': payload } : payload,
-		formData
-	);
+export const objectToFormData = (data: unknown, formData: FormData = new FormData()) => {
+	// const isSvelte5State = isSvelteState(data);
+	// console.log({ isSvelte5State }, isArray(data[stateSymbol(data)].t), data[stateSymbol(data)].t);
+	if (data === undefined) return formData;
+	processFormData(!isObject(data) ? { '######ROOT######': data } : data, formData);
 	return formData;
 };
 
