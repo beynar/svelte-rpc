@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.0.34
+
+[compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.32...v0.0.34)
+
+### 🩹 Fixes
+
+- 🐛  simplify isObject to better handle svelte 5 $state ([946439f](https://github.com/beynar/svelte-rpc/commit/946439f))
+
+### 🏡 Chore
+
+- **release:** V0.0.32 ([44d8017](https://github.com/beynar/svelte-rpc/commit/44d8017))
+
+### ❤️ Contributors
+
+- Beynar ([@beynar](http://github.com/beynar))
+
 ## v0.0.32
 
 [compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.31...v0.0.32)
