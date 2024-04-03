@@ -100,7 +100,7 @@ export type HandlePayload<
 	S extends Schema | undefined,
 	Use extends Middleware[] | undefined
 > = (S extends Schema
-	? { event: SafeRequestEvent; input: SchemaInput<S> }
+	? { event: SafeRequestEvent; input: SchemaOutput<S> }
 	: { event: SafeRequestEvent }) & {
 	ctx: ReturnOfMiddlewares<Use>;
 };

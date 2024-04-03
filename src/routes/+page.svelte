@@ -50,6 +50,16 @@
 >
 	object
 </button>
+
+<button
+	on:click={async () => {
+		const res = await api.test.partial({ optional: 'string' });
+
+		console.log({ res, res });
+	}}
+>
+	object
+</button>
 <button
 	on:click={async () => {
 		const res = await api.test.array(array);

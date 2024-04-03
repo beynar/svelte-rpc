@@ -67,6 +67,15 @@ const router = {
 			});
 		}),
 	test: {
+		partial: procedure()
+			.input(
+				z.object({
+					optional: z.string().optional()
+				})
+			)
+			.handle(async ({ input }) => {
+				return input;
+			}),
 		test: procedure()
 			.input(string())
 			.handle(async ({ event }) => {
