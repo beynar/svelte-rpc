@@ -14,6 +14,7 @@ I needed to use cookies methods inside my procedures, to handle file uploads/dow
 - Simpler api (no .mutate, .query) just call the procedure itself
 - Works with [Valibot](https://github.com/fabian-hiller/valibot) and [Zod](https://github.com/colinhacks/zod).
 - Ability to handle file uploads
+- Handle Map and Set
 - Type safe streamed response
 - Type safe file download
 - Very tiny, client and server are both under 2kb gzipped
