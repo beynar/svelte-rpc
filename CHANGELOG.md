@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.0.37
+
+[compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.36...v0.0.37)
+
+### 🚀 Enhancements
+
+- 🔥  Use output and input types from zod and valibot to better handle procedure type ([ac10084](https://github.com/beynar/svelte-rpc/commit/ac10084))
+
+### 🏡 Chore
+
+- **release:** V0.0.36 ([f5537bf](https://github.com/beynar/svelte-rpc/commit/f5537bf))
+
+### ❤️ Contributors
+
+- Beynar <arnaud@derbey.dev>
+
 ## v0.0.36
 
 [compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.34...v0.0.36)
