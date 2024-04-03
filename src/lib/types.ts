@@ -15,20 +15,35 @@ export type StreamsCallbacks<C> = {
 	onChunk?: (onChunk: { chunk: C; first: boolean }) => MaybePromise<void>;
 	onEnd?: (chunks: C[]) => MaybePromise<void>;
 };
-export type PreparedHandler = {
-	call: Caller;
+export type PreparedHandler<
+	S extends Schema | undefined,
+	M extends Middleware[],
+	H extends HandleFunction<S, M>
+> = {
+	parse: (data: any) => Promise<S extends Schema ? SchemaInput<S> : undefined>;
+	call: (
+		event: RequestEvent,
+		input: S extends Schema ? SchemaInput<S> : undefined
+	) => Promise<ReturnType<H>>;
+};
+
+export type Router = {
+	[K: string]: AnyHandler | Router;
+};
+
+export type AnyHandler = {
+	call: (event: any, input: any) => MaybePromise<any>;
 	parse: (data: any) => MaybePromise<any>;
 };
-export type Router = {
-	[K: string]: PreparedHandler | Router;
-};
+
 export type API<R extends Router = Router> = {
 	[K in keyof R]: R[K] extends Router
 		? APIRoute<R[K]>
-		: R[K] extends PreparedHandler
+		: R[K] extends AnyHandler
 			? PreparedHandlerType<R[K]>
 			: never;
 };
+
 type Caller = (event: any, input: any) => MaybePromise<any>;
 type ReturnTypeOfCaller<C extends Caller> =
 	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Promise<Awaited<ReturnType<C>>>;
@@ -43,17 +58,18 @@ type APICaller<C extends Caller, I> =
 			? () => ReturnTypeOfCaller<C>
 			: (input: I) => ReturnTypeOfCaller<C>;
 
-export type PreparedHandlerType<H extends PreparedHandler> = H['call'] extends (
+export type PreparedHandlerType<H extends AnyHandler = AnyHandler> = H['call'] extends (
 	...args: infer U
 ) => MaybePromise<any>
 	? APICaller<H['call'], U[1]>
 	: never;
 
 export type MaybePromise<T> = T | Promise<T>;
+
 export type APIRoute<R extends Router> = {
 	[K in keyof R]: R[K] extends Router
 		? APIRoute<R[K]>
-		: R[K] extends PreparedHandler
+		: R[K] extends AnyHandler
 			? PreparedHandlerType<R[K]>
 			: never;
 };
@@ -104,18 +120,16 @@ type Get<T, K extends string> = K extends `${infer P}.${infer Rest}`
 		: never;
 
 type Procedures<R extends Router, P extends RouterPaths<R>> = Get<R, P>;
+
 type InferStreamReturnOrJsonReturn<T> = T extends ReadableStream<infer U> ? U : T;
+
 export type ReturnTypeOfProcedure<R extends Router, P extends RouterPaths<R>> =
-	Procedures<R, P> extends PreparedHandler
+	Procedures<R, P> extends AnyHandler
 		? InferStreamReturnOrJsonReturn<Awaited<ReturnType<Procedures<R, P>['call']>>>
 		: Procedures<R, P>;
 
 export type InputOfProcedure<R extends Router, P extends RouterPaths<R>> =
-	Procedures<R, P> extends PreparedHandler ? Parameters<Procedures<R, P>['call']>[1] : never;
-
-import type { ConditionalExcept } from 'type-fest';
+	Procedures<R, P> extends AnyHandler ? Parameters<Procedures<R, P>['call']>[1] : never;
 
 export type SafeRequestEvent2 = RequestEvent;
-export type SafeRequestEvent = Omit<RequestEvent, 'locals'> & {
-	locals: ConditionalExcept<App.Locals, API>;
-};
+export type SafeRequestEvent = RequestEvent;

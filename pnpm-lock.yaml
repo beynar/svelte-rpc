@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+dependencies:
+  ampliform:
+    specifier: ^0.0.7
+    version: 0.0.7
+
 devDependencies:
   '@playwright/test':
     specifier: ^1.28.1
@@ -1035,6 +1040,10 @@ packages:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
     dev: true
+
+  /ampliform@0.0.7:
+    resolution: {integrity: sha512-2OJwn3eliG2SxRwjM0gsVfs+C7LynlQ1v4fvl/5pc73DT1mNHsLwAn3l0jw0qU2oFmgDjM20YQgRdhjjDB3mLg==}
+    dev: false
 
   /ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}

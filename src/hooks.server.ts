@@ -1,10 +1,12 @@
 import { createRPCHandle, procedure, stream } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
 import { sequence } from '@sveltejs/kit/hooks';
-import { date, object, string, array } from 'valibot';
+import { date, object, string, array, set, map } from 'valibot';
 import OpenAI from 'openai';
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
 import { z } from 'zod';
+import { subRouter } from './test.js';
+
 const openai = new OpenAI({
 	apiKey: PRIVATE_OPEN_API_KEY
 });
@@ -21,6 +23,7 @@ const router = {
 		});
 		return { data: true };
 	}),
+	subRouter,
 	complex: procedure()
 		.input(
 			z.object({
@@ -66,23 +69,39 @@ const router = {
 	test: {
 		test: procedure()
 			.input(string())
-			.handle(async () => {
-				return { result: undefined };
+			.handle(async ({ event }) => {
+				return { result: undefined, event: event.locals.test };
 			}),
 		object: procedure()
-			.input(object({ test: string(), image: date() }))
+			.input(object({ test: string(), date: date() }))
 			.handle(async () => {
 				return { data: true };
+			}),
+		mapAndSet: procedure()
+			.input(
+				object({
+					set: set(string()),
+					map: map(
+						string(),
+						object({
+							name: string(),
+							date: date()
+						})
+					)
+				})
+			)
+			.handle(async ({ input }) => {
+				return { input };
 			}),
 		array: procedure()
 			.input(array(object({ test: string(), image: date() })))
-			.handle(async () => {
-				return { data: true };
+			.handle(async ({ event }) => {
+				return { data: true, test: event.locals.test };
 			})
 	}
 } satisfies Router;
-
 export type AppRouter = typeof router;
+
 export const handle = sequence(
 	createRPCHandle({ router })
 	// createRPCHandle({ router, endpoint: false, localsApiKey: 'admin' })

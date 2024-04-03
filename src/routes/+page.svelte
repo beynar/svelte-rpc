@@ -1,21 +1,20 @@
 <script lang="ts">
 	import { api } from './api.js';
-	let st = $state('ee');
 	let object = $state({
-		image: new Date(),
+		date: new Date(),
 		test: 'st'
 	});
 	let array = $state([
 		{
-			image: new Date(),
+			date: new Date(),
 			test: 'st'
 		}
 	]);
 	const test = async () => {
 		type ReturnType = InferRPCReturnType<'route'>;
-		type Payload = InferRPCInput<'test.test2'>;
+		type Payload = InferRPCInput<'test.test'>;
 
-		const res = await api.test.test2(object).then((res) => {
+		const res = await api.test.test('object').then((res) => {
 			console.log(res);
 			return res;
 		});
@@ -31,11 +30,22 @@
 	};
 </script>
 
-{object.test}
 <button
 	on:click={async () => {
 		const res = await api.test.object(object);
-		console.log(res);
+		const res2 = await api.test.mapAndSet({
+			map: new Map([
+				[
+					'test',
+					{
+						date: new Date(),
+						name: 'test'
+					}
+				]
+			]),
+			set: new Set(['test'])
+		});
+		console.log({ res, res2 });
 	}}
 >
 	object

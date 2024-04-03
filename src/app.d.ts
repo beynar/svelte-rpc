@@ -6,6 +6,7 @@ declare global {
 		interface Locals {
 			test: boolean;
 			api: import('$lib/types.js').API<import('./hooks.server.js').AppRouter>;
+			srpc: import('$lib/types.js').API<import('./hooks.server.js').AppRouter>;
 		}
 		// interface PageData {}
 		// interface PageState {}

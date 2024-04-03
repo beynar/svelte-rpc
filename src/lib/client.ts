@@ -1,5 +1,6 @@
-import { objectToFormData, tryParse } from './utils.js';
+import { tryParse } from './utils.js';
 import type { API, MaybePromise, Router, StreamCallback } from './types.js';
+import { deform, formify } from 'ampliform';
 
 export const createRecursiveProxy = (
 	callback: (opts: { path: string[]; args: unknown[] }) => unknown,
@@ -29,7 +30,7 @@ export const createRPCClient = <R extends Router>(
 	{
 		endpoint = '/api',
 		headers,
-		onError = () => {}
+		onError
 	}: {
 		endpoint?: `/${string}`;
 		headers?:
@@ -37,64 +38,67 @@ export const createRPCClient = <R extends Router>(
 			| (<I = unknown>({ path, input }: { path: string; input: I }) => MaybePromise<HeadersInit>);
 		onError?: (error: App.Error) => void;
 	} = {
-		endpoint: '/api',
-		onError: () => {}
+		endpoint: '/api'
 	}
 ) => {
-	return createRecursiveProxy(async (opts) => {
-		return fetch(`${endpoint}/${opts.path.join('/')}`, {
+	return createRecursiveProxy(async ({ path, args }) => {
+		return fetch(`${endpoint}/${path.join('/')}`, {
 			method: 'POST',
-			body: objectToFormData(opts.args[0]),
-			headers:
+			body: formify(args[0]),
+			headers: Object.assign(
+				{
+					'x-svelte-rpc-client': 'true'
+				},
 				typeof headers === 'function'
 					? await headers({
-							path: opts.path.join('/'),
-							input: opts.args[0]
+							path: path.join('/'),
+							input: args[0]
 						})
 					: headers
+			)
 		}).then(async (res) => {
-			if (res.headers.get('content-type') === 'text/event-stream') {
-				const reader = res.body!.getReader();
-				const decoder = new TextDecoder();
-				let buffer = '';
-				let first = true;
-				const callback = (chunk: string, done: boolean) => {
-					if (done) {
-						return;
-					}
-					const lines = (buffer + chunk).split('\n');
-					buffer = lines.pop()!;
-					lines.forEach((line, i) => {
-						if (first && i === 0 && line === '') {
+			if (!res.ok) {
+				onError?.(await res.json());
+			} else {
+				if (res.headers.get('content-type') === 'text/event-stream') {
+					const reader = res.body!.getReader();
+					const decoder = new TextDecoder();
+					let buffer = '';
+					let first = true;
+					const callback = (chunk: string, done: boolean) => {
+						if (done) {
 							return;
 						}
-						(opts.args[1] as StreamCallback)({
-							chunk: tryParse(line),
-							first
+						const lines = (buffer + chunk).split('\n');
+						buffer = lines.pop()!;
+						lines.forEach((line, i) => {
+							if (first && i === 0 && line === '') {
+								return;
+							}
+							(args[1] as StreamCallback)({
+								chunk: tryParse(line),
+								first
+							});
+							first = false;
 						});
-						first = false;
-					});
-				};
-				// eslint-disable-next-line no-constant-condition
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) {
-						break;
+					};
+					// eslint-disable-next-line no-constant-condition
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) {
+							break;
+						}
+						callback(decoder.decode(value), done);
 					}
-					callback(decoder.decode(value), done);
+				} else if (res.headers.get('content-type')?.includes('multipart/form-data')) {
+					const formData = await res.formData();
+					return deform(formData as FormData) as { result: unknown };
+				} else if (res.headers.get('content-disposition')?.includes('filename')) {
+					return new File(
+						[await res.blob()],
+						res.headers.get('content-disposition')?.split('filename=')[1] || 'file'
+					);
 				}
-			} else if (res.headers.get('content-type') === 'application/json') {
-				const { result } = await res.json();
-				if (res.ok) {
-					return result;
-				} else {
-					onError(result as App.Error);
-				}
-			} else if (res.headers.get('content-disposition')?.includes('filename')) {
-				return new File(
-					[await res.blob()],
-					res.headers.get('content-disposition')?.split('filename=')[1] || 'file'
-				);
 			}
 		});
 	}, []) as API<R>;
