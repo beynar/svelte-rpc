@@ -30,6 +30,7 @@
 	};
 </script>
 
+<button on:click={test}> cookies </button>
 <button
 	on:click={async () => {
 		const res = await api.test.object(object);
@@ -55,7 +56,7 @@
 	on:click={async () => {
 		const res = await api.test.partial({ optional: 'string' });
 
-		console.log({ res, res });
+		console.log({ res });
 	}}
 >
 	object

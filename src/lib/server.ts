@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type RequestEvent, type Handle as SvelteKitHandle, json, error } from '@sveltejs/kit';
+import { type RequestEvent, type Handle as SvelteKitHandle, json } from '@sveltejs/kit';
 import { tryParse } from './utils.js';
-import { deform, formify } from 'ampliform';
+import { deform, form } from 'ampliform';
 import type { CookieSerializeOptions } from 'cookie';
 import type {
 	API,
-	AnyHandler,
 	HandleFunction,
 	Middleware,
 	PreparedHandler,
@@ -17,29 +16,22 @@ import type {
 	StreamsCallbacks
 } from './types.js';
 import { createRecursiveProxy } from './client.js';
+
 const getHandler = (router: Router, path: string[]) => {
-	let handler: Router | AnyHandler | undefined = router;
+	type H = Router | PreparedHandler<any, any, any> | undefined;
+	let handler: H = router;
 	path.forEach((segment) => {
-		handler = handler
-			? (handler[segment as keyof typeof handler] as Router | AnyHandler | undefined)
+		handler = handler?.[segment as keyof typeof handler]
+			? (handler?.[segment as keyof typeof handler] as H)
 			: undefined;
 	});
-	if ('call' in handler && 'parse' in handler) {
-		// @ts-expect-error we are on the edge here
-		return handler as AnyHandler;
-	} else {
-		error(404, "API route doesn't exist");
-	}
+	return (handler ? handler : null) as any | null;
 };
 
 const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
-	return createRecursiveProxy(async (opts) => {
-		const {
-			path,
-			args: [data]
-		} = opts;
+	return createRecursiveProxy(async ({ path, args }) => {
 		const handler = getHandler(router, path);
-		const parsedData = await handler.parse(data);
+		const parsedData = await handler.parse(args[0]);
 		return handler.call(event, parsedData);
 	}, []) as API<R>;
 };
@@ -50,19 +42,19 @@ export const stream = <C>(result: ReadableStream<C>, callbacks?: StreamsCallback
 	let first = true;
 	const decoder = new TextDecoder();
 	const stream = new ReadableStream({
-		start(controller) {
-			callbacks?.onStart?.();
+		async start(controller) {
+			await callbacks?.onStart?.();
 			const push = async () => {
 				const { done, value } = await streamReader.read();
 
 				if (done) {
+					await callbacks?.onEnd?.(chunks);
 					controller.close();
-					callbacks?.onEnd?.(chunks);
 					return;
 				} else if (value) {
 					const chunk = tryParse<C>(decoder.decode(value as any));
+					await callbacks?.onChunk?.({ chunk, first });
 					chunks.push(chunk);
-					callbacks?.onChunk?.({ chunk, first });
 					first = false;
 				}
 				controller.enqueue(value);
@@ -124,21 +116,19 @@ export const createRPCHandle = <R extends Router>({
 					return new Response(result, {
 						headers: { 'Content-Type': 'text/event-stream' }
 					});
-				} else if (result && result instanceof File) {
-					return new Response(result, {
-						headers: {
-							'Content-Type': result.type,
-							'Content-Disposition': 'attachment; filename=' + result.name
-						}
-					});
 				} else {
-					const headers = {
-						'Set-Cookie': cookies
+					console.log(
+						cookies
 							.map(({ name, value, opts }) => event.cookies.serialize(name, value, opts))
 							.join('; ')
-					};
+					);
+					const headers = new Headers();
+					cookies.forEach(({ name, value, opts }) => {
+						headers.append('Set-Cookie', event.cookies.serialize(name, value, opts));
+					});
+
 					if (isClientRequest) {
-						return new Response(formify(result), { headers });
+						return new Response(form(result), { headers });
 					} else {
 						return json(
 							{ result },
@@ -157,7 +147,6 @@ export const createRPCHandle = <R extends Router>({
 				);
 			}
 		}
-
 		return resolve(event);
 	};
 };

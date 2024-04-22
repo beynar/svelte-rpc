@@ -79,6 +79,13 @@ const router = {
 		test: procedure()
 			.input(string())
 			.handle(async ({ event }) => {
+				event.cookies.set('test-1', 'test-1', {
+					path: '/'
+				});
+				event.cookies.set('test-2', 'test-2', {
+					path: '/'
+				});
+
 				return { result: undefined, event: event.locals.test };
 			}),
 		object: procedure()
@@ -103,7 +110,7 @@ const router = {
 				return { input };
 			}),
 		array: procedure()
-			.input(array(object({ test: string(), image: date() })))
+			.input(array(object({ test: string(), date: date() })))
 			.handle(async ({ event }) => {
 				return { data: true, test: event.locals.test };
 			})

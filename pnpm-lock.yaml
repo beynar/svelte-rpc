@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   ampliform:
-    specifier: ^0.0.7
-    version: 0.0.7
+    specifier: ^0.0.9
+    version: 0.0.9
 
 devDependencies:
   '@playwright/test':
@@ -1041,8 +1041,10 @@ packages:
       uri-js: 4.4.1
     dev: true
 
-  /ampliform@0.0.7:
-    resolution: {integrity: sha512-2OJwn3eliG2SxRwjM0gsVfs+C7LynlQ1v4fvl/5pc73DT1mNHsLwAn3l0jw0qU2oFmgDjM20YQgRdhjjDB3mLg==}
+  /ampliform@0.0.9:
+    resolution: {integrity: sha512-bh/JCPzNoe2Z09DlZu2kHlLMauSA7q0SBro25M9KLL8xgu0d5Vo4ZMGG2vIgEg/a9XImvD+UnYuo6LBA33CSHw==}
+    dependencies:
+      superjson: 2.2.1
     dev: false
 
   /ansi-regex@5.0.1:
@@ -1223,6 +1225,13 @@ packages:
     resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
     engines: {node: '>= 0.6'}
     dev: true
+
+  /copy-anything@3.0.5:
+    resolution: {integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==}
+    engines: {node: '>=12.13'}
+    dependencies:
+      is-what: 4.1.16
+    dev: false
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -1844,6 +1853,11 @@ packages:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: true
+
+  /is-what@4.1.16:
+    resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
+    engines: {node: '>=12.13'}
+    dev: false
 
   /isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -2629,6 +2643,13 @@ packages:
     dependencies:
       js-tokens: 8.0.3
     dev: true
+
+  /superjson@2.2.1:
+    resolution: {integrity: sha512-8iGv75BYOa0xRJHK5vRLEjE2H/i4lulTjzpUXic3Eg8akftYjkmQDa8JARQ42rlczXyFR3IeRoeFCc7RxHsYZA==}
+    engines: {node: '>=16'}
+    dependencies:
+      copy-anything: 3.0.5
+    dev: false
 
   /supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}

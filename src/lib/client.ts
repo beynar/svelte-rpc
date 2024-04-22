@@ -1,6 +1,6 @@
 import { tryParse } from './utils.js';
 import type { API, MaybePromise, Router, StreamCallback } from './types.js';
-import { deform, formify } from 'ampliform';
+import { deform, form } from 'ampliform';
 
 export const createRecursiveProxy = (
 	callback: (opts: { path: string[]; args: unknown[] }) => unknown,
@@ -44,7 +44,7 @@ export const createRPCClient = <R extends Router>(
 	return createRecursiveProxy(async ({ path, args }) => {
 		return fetch(`${endpoint}/${path.join('/')}`, {
 			method: 'POST',
-			body: formify(args[0]),
+			body: form(args[0]),
 			headers: Object.assign(
 				{
 					'x-svelte-rpc-client': 'true'
@@ -91,13 +91,7 @@ export const createRPCClient = <R extends Router>(
 						callback(decoder.decode(value), done);
 					}
 				} else if (res.headers.get('content-type')?.includes('multipart/form-data')) {
-					const formData = await res.formData();
-					return deform(formData as FormData) as { result: unknown };
-				} else if (res.headers.get('content-disposition')?.includes('filename')) {
-					return new File(
-						[await res.blob()],
-						res.headers.get('content-disposition')?.split('filename=')[1] || 'file'
-					);
+					return deform((await res.formData()) as FormData) as { result: unknown };
 				}
 			}
 		});
