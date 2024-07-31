@@ -3,6 +3,6 @@ import type { AppRouter } from '../hooks.server.js';
 
 export const api = createRPCClient<AppRouter>({
 	onError: (error) => {
-		console.log(error.message);
+		console.log(error);
 	}
 });

@@ -66,6 +66,7 @@ const router = {
 				}
 			});
 		}),
+
 	test: {
 		partial: procedure()
 			.input(
@@ -76,6 +77,23 @@ const router = {
 			.handle(async ({ input }) => {
 				return input;
 			}),
+		errorTest: procedure()
+			.input(
+				z.object({
+					optional: z.string().optional()
+				})
+			)
+			.handle(async ({ input }) => {
+				return input;
+			}),
+		optional: procedure()
+			.input(z.string().optional())
+			.handle(async ({ input }) => {
+				return input;
+			}),
+		noPayload: p.handle(async () => {
+			return { data: true };
+		}),
 		test: procedure()
 			.input(string())
 			.handle(async ({ event }) => {
@@ -116,6 +134,7 @@ const router = {
 			})
 	}
 } satisfies Router;
+
 export type AppRouter = typeof router;
 
 export const handle = sequence(

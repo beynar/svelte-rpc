@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type RequestEvent, type Handle as SvelteKitHandle, json } from '@sveltejs/kit';
 import { tryParse } from './utils.js';
-import { deform, form } from 'ampliform';
+import { deform, form } from './deform.js';
 import type { CookieSerializeOptions } from 'cookie';
 import type {
 	API,
@@ -117,11 +117,6 @@ export const createRPCHandle = <R extends Router>({
 						headers: { 'Content-Type': 'text/event-stream' }
 					});
 				} else {
-					console.log(
-						cookies
-							.map(({ name, value, opts }) => event.cookies.serialize(name, value, opts))
-							.join('; ')
-					);
 					const headers = new Headers();
 					cookies.forEach(({ name, value, opts }) => {
 						headers.append('Set-Cookie', event.cookies.serialize(name, value, opts));
@@ -140,7 +135,7 @@ export const createRPCHandle = <R extends Router>({
 				}
 			} catch (error) {
 				return json(
-					{ error: JSON.parse((error as { message?: string }).message || 'Server error') },
+					{ message: tryParse(error.message), error: tryParse(error || 'Server error') },
 					{
 						status: 400
 					}

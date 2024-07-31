@@ -4,6 +4,9 @@ import type { RequestEvent } from '@sveltejs/kit';
 import type { Input as VInput, Output as VOutput, BaseSchema as VSchema } from 'valibot';
 import type { Schema as ZSchema, infer as ZOutput, input as ZInput } from 'zod';
 
+// Generic to test if type T = undefined | something
+type IsUndefined<T> = T extends undefined | infer U ? true : false;
+
 export type Schema = ZSchema | VSchema;
 
 export type SchemaInput<S extends Schema> = S extends ZSchema
@@ -23,16 +26,29 @@ export type StreamsCallbacks<C> = {
 	onChunk?: (onChunk: { chunk: C; first: boolean }) => MaybePromise<void>;
 	onEnd?: (chunks: C[]) => MaybePromise<void>;
 };
+// export type PreparedHandler<
+// 	S extends Schema | undefined,
+// 	M extends Middleware[],
+// 	H extends HandleFunction<S, M>
+// > = {
+// 	parse: (data: any) => Promise<S extends Schema ? SchemaInput<S> : undefined>;
+// 	call: (
+// 		event: RequestEvent,
+// 		input: S extends Schema ? SchemaInput<S> : undefined
+// 	) => Promise<ReturnType<H>>;
+// };
+
 export type PreparedHandler<
 	S extends Schema | undefined,
 	M extends Middleware[],
 	H extends HandleFunction<S, M>
 > = {
 	parse: (data: any) => Promise<S extends Schema ? SchemaInput<S> : undefined>;
-	call: (
-		event: RequestEvent,
-		input: S extends Schema ? SchemaInput<S> : undefined
-	) => Promise<ReturnType<H>>;
+	call: S extends Schema
+		? SchemaInput<S> extends undefined
+			? (event: RequestEvent, input?: SchemaInput<S> | undefined) => Promise<ReturnType<H>>
+			: (event: RequestEvent, input: SchemaInput<S>) => Promise<ReturnType<H>>
+		: (event: RequestEvent) => Promise<ReturnType<H>>;
 };
 
 export type Router = {
@@ -57,13 +73,14 @@ type ReturnTypeOfCaller<C extends Caller> =
 	Awaited<ReturnType<C>> extends ReadableStream<any> ? never : Promise<Awaited<ReturnType<C>>>;
 
 export type StreamCallback<S = any> = ({ chunk, first }: { chunk: S; first: boolean }) => void;
+
 type APICaller<C extends Caller, I> =
 	Awaited<ReturnType<C>> extends ReadableStream<infer S>
 		? I extends undefined
 			? (callback: StreamCallback<S>) => never
 			: (input: I, callback: StreamCallback<S>) => ReturnTypeOfCaller<C>
-		: I extends undefined
-			? () => ReturnTypeOfCaller<C>
+		: IsUndefined<I> extends true
+			? (input?: I) => ReturnTypeOfCaller<C>
 			: (input: I) => ReturnTypeOfCaller<C>;
 
 export type PreparedHandlerType<H extends AnyHandler = AnyHandler> = H['call'] extends (

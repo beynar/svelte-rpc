@@ -28,9 +28,21 @@
 		});
 		console.log('done');
 	};
+
+	const optionnalTest = async () => {
+		await api.test.optional('hello');
+	};
+	const noPayloadTest = async () => {
+		await api.test.noPayload();
+	};
+	const errorTest = async () => {
+		await api.test.errorTest();
+	};
 </script>
 
 <button on:click={test}> cookies </button>
+<button on:click={optionnalTest}> optionnal test </button>
+<button on:click={errorTest}> error test </button>
 <button
 	on:click={async () => {
 		const res = await api.test.object(object);

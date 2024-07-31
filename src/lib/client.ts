@@ -1,6 +1,6 @@
 import { tryParse } from './utils.js';
 import type { API, MaybePromise, Router, StreamCallback } from './types.js';
-import { deform, form } from 'ampliform';
+import { deform, form } from './deform.js';
 
 export const createRecursiveProxy = (
 	callback: (opts: { path: string[]; args: unknown[] }) => unknown,
