@@ -36,7 +36,15 @@ export const createRPCClient = <R extends Router>(
 		headers?:
 			| HeadersInit
 			| (<I = unknown>({ path, input }: { path: string; input: I }) => MaybePromise<HeadersInit>);
-		onError?: (error: App.Error) => void;
+		onError?: (
+			error: {
+				error: string;
+				message: string;
+				status: number;
+				statusText: string;
+			},
+			response: Response
+		) => void;
 	} = {
 		endpoint: '/api'
 	}
@@ -58,7 +66,15 @@ export const createRPCClient = <R extends Router>(
 			)
 		}).then(async (res) => {
 			if (!res.ok) {
-				onError?.(await res.json());
+				onError?.(
+					{
+						...(await res.clone().json()),
+						status: res.status,
+						statusText: res.statusText
+					},
+					res.clone()
+				);
+				throw new Error(res.statusText);
 			} else {
 				if (res.headers.get('content-type') === 'text/event-stream') {
 					const reader = res.body!.getReader();

@@ -1,52 +1,77 @@
-const httpErrorMap = new Map([
-	['BAD_REQUEST', 400],
-	['UNAUTHORIZED', 401],
-	['FORBIDDEN', 403],
-	['NOT_FOUND', 404],
-	['METHOD_NOT_SUPPORTED', 405],
-	['TIMEOUT', 408],
-	['CONFLICT', 409],
-	['PRECONDITION_FAILED', 412],
-	['PAYLOAD_TOO_LARGE', 413],
-	['UNSUPPORTED_MEDIA_TYPE', 415],
-	['UNPROCESSABLE_CONTENT', 422],
-	['TOO_MANY_REQUESTS', 429],
-	['CLIENT_CLOSED_REQUEST', 499],
-	['INTERNAL_SERVER_ERROR', 500],
-	['NOT_IMPLEMENTED', 501],
-	['BAD_GATEWAY', 502],
-	['SERVICE_UNAVAILABLE', 503],
-	['GATEWAY_TIMEOUT', 504]
-]);
-interface HttpError {
-	code: number;
-	description: string;
-}
+import { tryParse } from './utils.js';
+import { isHttpError } from '@sveltejs/kit';
+const httpErrorMap = {
+	BAD_REQUEST: { code: 400, message: 'Bad Request' },
+	UNAUTHORIZED: { code: 401, message: 'Unauthorized' },
+	FORBIDDEN: { code: 403, message: 'Forbidden' },
+	NOT_FOUND: { code: 404, message: 'Not Found' },
+	METHOD_NOT_SUPPORTED: { code: 405, message: 'Method Not Supported' },
+	TIMEOUT: { code: 408, message: 'Timeout' },
+	CONFLICT: { code: 409, message: 'Conflict' },
+	PRECONDITION_FAILED: { code: 412, message: 'Precondition Failed' },
+	PAYLOAD_TOO_LARGE: { code: 413, message: 'Payload Too Large' },
+	UNSUPPORTED_MEDIA_TYPE: { code: 415, message: 'Unsupported Media Type' },
+	UNPROCESSABLE_CONTENT: { code: 422, message: 'Unprocessable Content' },
+	TOO_MANY_REQUESTS: { code: 429, message: 'Too Many Requests' },
+	CLIENT_CLOSED_REQUEST: { code: 499, message: 'Client Closed Request' },
+	INTERNAL_SERVER_ERROR: { code: 500, message: 'Internal Server Error' },
+	NOT_IMPLEMENTED: { code: 501, message: 'Not Implemented' },
+	BAD_GATEWAY: { code: 502, message: 'Bad Gateway' },
+	SERVICE_UNAVAILABLE: { code: 503, message: 'Service Unavailable' },
+	GATEWAY_TIMEOUT: { code: 504, message: 'Gateway Timeout' }
+} as const;
+type ERROR = keyof typeof httpErrorMap;
 
-function generateError(code: number): HttpError | null {
-	const error = httpErrorMap.get(getErrorCodeName(code));
-	if (!error) {
-		throw new Error(`Unknown HTTP error code: ${code}`);
-	}
-	return error;
-}
-
-function getErrorCodeName(code: number): string {
-	switch (code) {
-		case 400:
-			return 'BAD_REQUEST';
-		case 401:
-			return 'UNAUTHORIZED';
-		// ... (add more cases for each error code)
-		default:
-			throw new Error(`Unknown HTTP error code: ${code}`);
+export class SRPCERROR extends Error {
+	code: ERROR;
+	message: string;
+	constructor(code: ERROR, message?: string) {
+		super(code);
+		this.code = code;
+		this.message = message || httpErrorMap[code].message;
 	}
 }
 
-// Example usage:
-const error = generateError(404);
-if (error) {
-	console.log(`Error ${error.code}: ${error.description}`);
-} else {
-	console.log('Unknown error');
-}
+export const error = (code: ERROR, message?: string) => {
+	throw new SRPCERROR(code, message);
+};
+
+export const getErrorAsJson = (
+	error: unknown
+): {
+	body: string;
+	status: number;
+	statusText: string;
+} => {
+	if (error instanceof SRPCERROR) {
+		return {
+			body: JSON.stringify({
+				error: error.message
+			}),
+			status: httpErrorMap[error.code].code,
+			statusText: httpErrorMap[error.code].message
+		};
+	} else if (isHttpError(error)) {
+		return {
+			body: error.body.message,
+			status: error.status,
+			statusText: error.body.message
+		};
+	} else {
+		return {
+			body: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+			// @ts-ignore
+			status: error.code || 500,
+			// @ts-ignore
+			statusText: tryParse(error.message) || 'Internal Server Error'
+		};
+	}
+};
+
+export const handleError = (error: unknown) => {
+	const { body, status, statusText } = getErrorAsJson(error);
+	return new Response(body, {
+		status,
+		statusText
+	});
+};

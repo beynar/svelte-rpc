@@ -8,7 +8,6 @@ import type {
 	API,
 	HandleFunction,
 	Middleware,
-	PreparedHandler,
 	ReturnOfMiddlewares,
 	Router,
 	Schema,
@@ -16,9 +15,10 @@ import type {
 	StreamsCallbacks
 } from './types.js';
 import { createRecursiveProxy } from './client.js';
+import { error, handleError } from './error.js';
 
 const getHandler = (router: Router, path: string[]) => {
-	type H = Router | PreparedHandler<any, any, any> | undefined;
+	type H = Router | Handler<any, any, any> | undefined;
 	let handler: H = router;
 	path.forEach((segment) => {
 		handler = handler?.[segment as keyof typeof handler]
@@ -31,7 +31,7 @@ const getHandler = (router: Router, path: string[]) => {
 const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 	return createRecursiveProxy(async ({ path, args }) => {
 		const handler = getHandler(router, path);
-		const parsedData = await handler.parse(args[0]);
+		const parsedData = parse(handler.schema, args[0]);
 		return handler.call(event, parsedData);
 	}, []) as API<R>;
 };
@@ -81,6 +81,7 @@ export const createRPCHandle = <R extends Router>({
 		if (typeof localsApiKey === 'string') {
 			Object.assign(event.locals, { [localsApiKey]: createCaller(router, event) });
 		}
+		Object.assign(event, { error: error, stream: stream });
 		if (endpoint && event.url.pathname.startsWith(endpoint)) {
 			const handler = getHandler(
 				router,
@@ -110,7 +111,7 @@ export const createRPCHandle = <R extends Router>({
 				? deform(await event.request.clone().formData())
 				: await event.request.clone().json();
 			try {
-				const data = await handler.parse(payload);
+				const data = parse(handler.schema, payload);
 				const result = await handler.call(event, data);
 				if (result?.constructor.name === 'ReadableStream') {
 					return new Response(result, {
@@ -134,57 +135,125 @@ export const createRPCHandle = <R extends Router>({
 					}
 				}
 			} catch (error) {
-				return json(
-					{ message: tryParse(error.message), error: tryParse(error || 'Server error') },
-					{
-						status: 400
-					}
-				);
+				return handleError(error);
 			}
 		}
 		return resolve(event);
 	};
 };
 
+export const parse = <S extends Schema | undefined>(schema: S, data: any) => {
+	if (schema === undefined) {
+		return undefined;
+	} else {
+		const parseResult =
+			// @ts-ignore
+			schema.safeParse?.(data) ||
+			schema._parse?.(data) ||
+			// @ts-ignore
+			schema._run?.({ value: data }, { abortEarly: true, abortPipeEarly: true });
+		const errors = parseResult?.error?.issues || parseResult.issues || parseResult.summary;
+		if (errors) {
+			throw error('BAD_REQUEST', errors);
+		}
+		if ('_run' in schema) {
+			return parseResult.value;
+		} else {
+			return parseResult.data || parseResult.output || parseResult;
+		}
+	}
+};
+
 export const procedure = <M extends Middleware[]>(...middlewares: M) => {
-	const useMiddlewares = async (event: RequestEvent): Promise<ReturnOfMiddlewares<M>> => {
+	return {
+		handle: <H extends HandleFunction<undefined, M>>(handleFunction: H) => {
+			return new Handler(middlewares, undefined, handleFunction) as Handler<M, undefined, H>;
+		},
+		input: <S extends Schema>(schema: S) => {
+			return {
+				handle: <H extends HandleFunction<S, M>>(handleFunction: H) =>
+					new Handler(middlewares, schema, handleFunction) as Handler<M, S, H>
+			};
+		}
+	};
+};
+
+export class Handler<
+	M extends Middleware[],
+	S extends Schema | undefined,
+	const H extends HandleFunction<S, M>
+> {
+	middlewares: M;
+	schema: S;
+	handleFunction: H;
+
+	constructor(middlewares: M, schema: S, handleFunction: H) {
+		this.middlewares = middlewares;
+		this.schema = schema;
+		this.handleFunction = handleFunction;
+	}
+
+	private useMiddlewares = async (
+		middlewares: M,
+		event: RequestEvent
+	): Promise<ReturnOfMiddlewares<M>> => {
 		const data = {};
 		if (middlewares) {
 			for (const middleware of middlewares) {
-				Object.assign(data, await middleware(event));
+				Object.assign(data, await middleware(event as any));
 			}
 		}
 		return data as ReturnOfMiddlewares<M>;
 	};
-	const handler =
-		<S extends Schema | undefined>(schema?: S) =>
-		<H extends HandleFunction<S, M>>(handler: H): PreparedHandler<S, M, H> => {
-			return {
-				parse: (data: any) => {
-					if (schema === undefined) {
-						return undefined;
-					} else {
-						// @ts-expect-error we are on the edge here
-						const parseResult = schema.safeParse?.(data) || schema._parse?.(data);
-						const errors = parseResult?.error?.issues || parseResult.issues;
-						if (errors) {
-							throw new Error(JSON.stringify(errors));
-						}
-						return parseResult.data || parseResult.output;
-					}
-				},
-				call: async (
-					event: RequestEvent,
-					input: S extends Schema ? SchemaInput<S> : undefined
-				): Promise<ReturnType<H>> => {
-					return handler({ event, input, ctx: await useMiddlewares(event) } as any);
-				}
-			};
-		};
-	return {
-		input: <S extends Schema>(schema: S) => ({
-			handle: handler(schema)
-		}),
-		handle: handler(undefined)
+
+	call = async (event: RequestEvent, input: S extends Schema ? SchemaInput<S> : undefined) => {
+		return this.handleFunction({
+			event,
+			input,
+			ctx: await this.useMiddlewares(this.middlewares, event)
+		} as any);
 	};
-};
+}
+
+// export const procedure = <M extends Middleware[]>(...middlewares: M) => {
+// 	const useMiddlewares = async (event: RPCRequestEvent): Promise<ReturnOfMiddlewares<M>> => {
+// 		const data = {};
+// 		if (middlewares) {
+// 			for (const middleware of middlewares) {
+// 				Object.assign(data, await middleware(event));
+// 			}
+// 		}
+// 		return data as ReturnOfMiddlewares<M>;
+// 	};
+// 	const handler =
+// 		<S extends Schema | undefined>(schema?: S) =>
+// 		<H extends HandleFunction<S, M>>(handler: H): PreparedHandler<S, M, H> => {
+// 			return {
+// 				parse: (data: any) => {
+// 					if (schema === undefined) {
+// 						return undefined;
+// 					} else {
+// 						// @ts-expect-error we are on the edge here
+// 						const parseResult = schema.safeParse?.(data) || schema._parse?.(data);
+// 						const errors = parseResult?.error?.issues || parseResult.issues;
+// 						if (errors) {
+// 							error('BAD_REQUEST', JSON.stringify(errors));
+// 						}
+// 						return parseResult.data || parseResult.output;
+// 					}
+// 				},
+// 				call: async (
+// 					event: RPCRequestEvent,
+// 					input: S extends Schema ? SchemaInput<S> : undefined
+// 				): Promise<ReturnType<H>> => {
+// 					return handler({ event, input, ctx: await useMiddlewares(event) } as any);
+// 				}
+// 			};
+// 		};
+// 	return {
+// 		input: <S extends Schema>(schema: S) => ({
+// 			handle: handler(schema)
+// 		}),
+// 		handle: handler(undefined)
+// 	};
+// };

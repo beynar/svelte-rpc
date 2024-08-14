@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import { subRouter } from './test.js';
+import { error } from '@sveltejs/kit';
 
 const openai = new OpenAI({
 	apiKey: PRIVATE_OPEN_API_KEY
@@ -83,7 +84,8 @@ const router = {
 					optional: z.string().optional()
 				})
 			)
-			.handle(async ({ input }) => {
+			.handle(async ({ input, event }) => {
+
 				return input;
 			}),
 		optional: procedure()
@@ -91,7 +93,7 @@ const router = {
 			.handle(async ({ input }) => {
 				return input;
 			}),
-		noPayload: p.handle(async () => {
+		noPayload: procedure().handle(async ({ event }) => {
 			return { data: true };
 		}),
 		test: procedure()
@@ -103,7 +105,6 @@ const router = {
 				event.cookies.set('test-2', 'test-2', {
 					path: '/'
 				});
-
 				return { result: undefined, event: event.locals.test };
 			}),
 		object: procedure()
@@ -133,7 +134,7 @@ const router = {
 				return { data: true, test: event.locals.test };
 			})
 	}
-} satisfies Router;
+};
 
 export type AppRouter = typeof router;
 
