@@ -81,7 +81,7 @@ const router = {
         hello: input.name
       };
     })
-} satisfies Router;
+};
 
 export type AppRouter = typeof router;
 
@@ -170,7 +170,7 @@ export const aiRouter = {
     }),
   chatWithStreamHelper: procedure()
     .input(string())
-    .handle(async ({ input }) => {
+    .handle(async ({ input, event }) => {
       const completion = await openai.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages: [
@@ -182,7 +182,7 @@ export const aiRouter = {
         ],
         stream: true
       });
-      return stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
+      return event.stream<OpenAI.ChatCompletionChunk>(completion.toReadableStream(), {
         onStart: () => {
           console.log('AI stream started');
         },
@@ -194,7 +194,7 @@ export const aiRouter = {
         }
       });
     })
-} satisfies Router;
+};
 ```
 
 ```svelte
