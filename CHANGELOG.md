@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.53
+
+[compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.43...v0.0.53)
+
+### 🏡 Chore
+
+- **release:** V0.0.43 ([43a4d4f](https://github.com/beynar/svelte-rpc/commit/43a4d4f))
+
+### ❤️ Contributors
+
+- Beynar <arnaud@derbey.dev>
+
 ## v0.0.43
 
 [compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.37...v0.0.43)
