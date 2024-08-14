@@ -158,8 +158,10 @@ export const parse = <S extends Schema | undefined>(schema: S, data: any) => {
 		}
 		if ('_run' in schema) {
 			return parseResult.value;
-		} else {
-			return parseResult.data || parseResult.output || parseResult;
+		} else if ('safeParse' in schema) {
+			return parseResult.data;
+		} else if ('_parse' in schema) {
+			return parseResult.output;
 		}
 	}
 };

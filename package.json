@@ -1,6 +1,6 @@
 {
   "name": "svelte-rpc",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && npm run package",
@@ -60,7 +60,7 @@
     "tslib": "^2.4.1",
     "type-fest": "^4.14.0",
     "typescript": "^5.0.0",
-    "valibot": "^0.30.0",
+    "valibot": "^0.37.0",
     "vite": "^5.0.11",
     "vitest": "^1.2.0",
     "zod": "^3.22.4"
@@ -68,7 +68,6 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "dependencies": {
-    "ampliform": "^0.0.9",
     "devalue": "^5.0.0"
   }
 }

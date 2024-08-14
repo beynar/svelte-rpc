@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { RequestEvent } from '@sveltejs/kit';
-import type { Input as VInput, Output as VOutput, BaseSchema as VSchema } from 'valibot';
+import type { BaseSchema as VSchema } from 'valibot';
 import type { Schema as ZSchema, infer as ZOutput, input as ZInput } from 'zod';
 import type { error } from './error.js';
 import type { Handler, stream } from './server.js';
 
-export type Schema = ZSchema | VSchema;
+export type Schema = ZSchema | VSchema<any, any, any>;
 
 export type SchemaInput<S extends Schema> = S extends ZSchema
 	? ZInput<S>
-	: S extends VSchema
-		? VInput<S>
+	: S extends VSchema<infer I, infer O, infer E>
+		? I
 		: never;
 
 export type SchemaOutput<S extends Schema> = S extends ZSchema
 	? ZOutput<S>
-	: S extends VSchema
-		? VOutput<S>
+	: S extends VSchema<infer I, infer O, infer E>
+		? O
 		: never;
 
 export type StreamsCallbacks<C> = {

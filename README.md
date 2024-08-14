@@ -142,7 +142,7 @@ The stream helper is useful when you want to handle the stream response lifecycl
 
 ```ts
 // src/routers/ai.ts
-import { type Router, procedure, stream } from 'svelte-rpc';
+import { procedure } from 'svelte-rpc';
 import { createRPCClient } from 'svelte-rpc/client';
 import { string } from 'valibot';
 import OpenAI from 'openai';
@@ -254,16 +254,3 @@ export {};
   // result is of type { hello: string }
 </script>
 ```
-
-<!-- #### File schema
-
-Svelte-rpc exports a file schema to handle file uploads. It is a simple wrapper around valibot
-
-```ts
-import { file } from 'svelte-rpc';
-
-const imageSchema = file({
-  mimeType: ['image/png', 'image/jpeg'],
-  maxSize: 1024 * 1024 * 5
-});
-``` -->

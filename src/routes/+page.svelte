@@ -5,7 +5,7 @@
 		test: 'st'
 	});
 
-	let stringState = $state('string');
+	let stringState = $state('');
 	let array = $state([
 		{
 			date: new Date(),
@@ -33,7 +33,7 @@
 
 	const optionnalTest = async () => {
 		const res = await api.test.optional(stringState);
-		console.log(res);
+		console.log({ res });
 	};
 	const noPayloadTest = async () => {
 		await api.test.noPayload();

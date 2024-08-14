@@ -67,7 +67,7 @@ export const  snapshot = <T>(value:T)=> {
 }
 
 export const form = (value: unknown, formData: FormData = new FormData()) => {
-	const isSvelteState = Object.getOwnPropertySymbols(value).some(
+	const isSvelteState = value && Object.getOwnPropertySymbols(value).some(
 		(symbol) => String(symbol)==='Symbol($state)')
   // Devalue can't handle object with symbolic keys. And we need to handle $state in a svelte 5 codebase.
   // We also do not want developers to have to use $state.snapshot everywhere
