@@ -37,34 +37,41 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 };
 
 export const stream = <C>(result: ReadableStream<C>, callbacks?: StreamsCallbacks<C>) => {
-	const streamReader = result.getReader();
-	const chunks: C[] = [];
-	let first = true;
-	const decoder = new TextDecoder();
-	const stream = new ReadableStream({
-		async start(controller) {
-			await callbacks?.onStart?.();
-			const push = async () => {
-				const { done, value } = await streamReader.read();
+	console.log(result.locked);
+	try {
+		const streamReader = result.getReader();
 
-				if (done) {
-					await callbacks?.onEnd?.(chunks);
-					controller.close();
-					return;
-				} else if (value) {
-					const chunk = tryParse<C>(decoder.decode(value as any));
-					await callbacks?.onChunk?.({ chunk, first });
-					chunks.push(chunk);
-					first = false;
-				}
-				controller.enqueue(value);
+		const chunks: C[] = [];
+		let first = true;
+		const decoder = new TextDecoder();
+		const stream = new ReadableStream({
+			async start(controller) {
+				await callbacks?.onStart?.();
+				const push = async () => {
+					const { done, value } = await streamReader.read();
+					console.log({ value });
+					if (done) {
+						await callbacks?.onEnd?.(chunks);
+						controller.close();
+						return;
+					} else if (value) {
+						const chunk =
+							typeof value === 'string' ? tryParse<C>(decoder.decode(value as any)) : value;
+						console.log({ chunk });
+						await callbacks?.onChunk?.({ chunk, first });
+						chunks.push(chunk);
+						first = false;
+					}
+					controller.enqueue(value);
+					push();
+				};
 				push();
-			};
-			push();
-		}
-	});
-
-	return stream as ReadableStream<C>;
+			}
+		});
+		return stream as ReadableStream<C>;
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 export const createRPCHandle = <R extends Router>({
@@ -114,6 +121,7 @@ export const createRPCHandle = <R extends Router>({
 				const data = parse(handler.schema, payload);
 				const result = await handler.call(event, data);
 				if (result?.constructor.name === 'ReadableStream') {
+					console.log('is stream');
 					return new Response(result, {
 						headers: { 'Content-Type': 'text/event-stream' }
 					});
@@ -149,6 +157,7 @@ export const parse = <S extends Schema | undefined>(schema: S, data: any) => {
 		const parseResult =
 			// @ts-ignore
 			schema.safeParse?.(data) ||
+			// @ts-ignore
 			schema._parse?.(data) ||
 			// @ts-ignore
 			schema._run?.({ value: data }, { abortEarly: true, abortPipeEarly: true });
@@ -216,46 +225,3 @@ export class Handler<
 		} as any);
 	};
 }
-
-// export const procedure = <M extends Middleware[]>(...middlewares: M) => {
-// 	const useMiddlewares = async (event: RPCRequestEvent): Promise<ReturnOfMiddlewares<M>> => {
-// 		const data = {};
-// 		if (middlewares) {
-// 			for (const middleware of middlewares) {
-// 				Object.assign(data, await middleware(event));
-// 			}
-// 		}
-// 		return data as ReturnOfMiddlewares<M>;
-// 	};
-// 	const handler =
-// 		<S extends Schema | undefined>(schema?: S) =>
-// 		<H extends HandleFunction<S, M>>(handler: H): PreparedHandler<S, M, H> => {
-// 			return {
-// 				parse: (data: any) => {
-// 					if (schema === undefined) {
-// 						return undefined;
-// 					} else {
-// 						// @ts-expect-error we are on the edge here
-// 						const parseResult = schema.safeParse?.(data) || schema._parse?.(data);
-// 						const errors = parseResult?.error?.issues || parseResult.issues;
-// 						if (errors) {
-// 							error('BAD_REQUEST', JSON.stringify(errors));
-// 						}
-// 						return parseResult.data || parseResult.output;
-// 					}
-// 				},
-// 				call: async (
-// 					event: RPCRequestEvent,
-// 					input: S extends Schema ? SchemaInput<S> : undefined
-// 				): Promise<ReturnType<H>> => {
-// 					return handler({ event, input, ctx: await useMiddlewares(event) } as any);
-// 				}
-// 			};
-// 		};
-// 	return {
-// 		input: <S extends Schema>(schema: S) => ({
-// 			handle: handler(schema)
-// 		}),
-// 		handle: handler(undefined)
-// 	};
-// };

@@ -35,6 +35,8 @@ export type AnyHandler = {
 	parse: (data: any) => MaybePromise<any>;
 };
 
+type ApiResult<T> = Promise<[Awaited<T>, null] | [null, object]>;
+
 export type API<R extends Router = Router> = {
 	[K in keyof R]: R[K] extends Router
 		? API<R[K]>
@@ -42,10 +44,10 @@ export type API<R extends Router = Router> = {
 			? S extends Schema
 				? ReturnType<H> extends Promise<ReadableStream<infer C>>
 					? (payload: SchemaInput<S>, callback: StreamCallback<C>) => void
-					: (payload: SchemaInput<S>) => ReturnType<H>
+					: (payload: SchemaInput<S>) => Promise<ApiResult<ReturnType<H>>>
 				: ReturnType<H> extends Promise<ReadableStream<infer C>>
 					? (callback: StreamCallback<C>) => void
-					: () => ReturnType<H>
+					: () => Promise<ApiResult<ReturnType<H>>>
 			: never;
 };
 
@@ -112,3 +114,26 @@ export type InputOfProcedure<R extends Router, P extends RouterPaths<R>> =
 	Procedures<R, P> extends AnyHandler ? Parameters<Procedures<R, P>['call']>[1] : never;
 
 export type RPCRequestEvent = RequestEvent & { error: typeof error; stream: typeof stream };
+
+export type InferInputAtPath<R extends Router, P extends RouterPaths<R>> =
+	Get<R, P> extends Handler<any, infer S, any>
+		? S extends Schema
+			? SchemaInput<S>
+			: never
+		: never;
+
+export type InferOutPutAtPath<R extends Router, P extends RouterPaths<R>> =
+	Get<R, P> extends Handler<infer M, infer S, infer H>
+		? H extends HandleFunction<S, infer M>
+			? Awaited<ReturnType<H>>
+			: never
+		: never;
+
+export type InferApiTypes<R> = R extends Router
+	? {
+			[K in RouterPaths<R>]: {
+				input: InferInputAtPath<R, K>;
+				output: InferOutPutAtPath<R, K>;
+			};
+		}
+	: never;

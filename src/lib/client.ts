@@ -30,21 +30,23 @@ export const createRPCClient = <R extends Router>(
 	{
 		endpoint = '/api',
 		headers,
+		throwOnError = false,
 		onError
 	}: {
 		endpoint?: `/${string}`;
+		throwOnError?: boolean;
 		headers?:
 			| HeadersInit
 			| (<I = unknown>({ path, input }: { path: string; input: I }) => MaybePromise<HeadersInit>);
-		onError?: (
+		onError?: (payload: {
 			error: {
 				error: string;
 				message: string;
 				status: number;
 				statusText: string;
-			},
-			response: Response
-		) => void;
+			};
+			response: Response;
+		}) => void;
 	} = {
 		endpoint: '/api'
 	}
@@ -66,15 +68,18 @@ export const createRPCClient = <R extends Router>(
 			)
 		}).then(async (res) => {
 			if (!res.ok) {
-				onError?.(
-					{
-						...(await res.clone().json()),
-						status: res.status,
-						statusText: res.statusText
-					},
-					res.clone()
-				);
-				throw new Error(res.statusText);
+				const error = {
+					// @ts-ignore
+					...(await res.clone().json()),
+					status: res.status,
+					statusText: res.statusText
+				};
+				onError?.({ error, response: res.clone() });
+				if (throwOnError) {
+					throw new Error(res.statusText);
+				} else {
+					return [null, error];
+				}
 			} else {
 				if (res.headers.get('content-type') === 'text/event-stream') {
 					const reader = res.body!.getReader();
@@ -107,7 +112,7 @@ export const createRPCClient = <R extends Router>(
 						callback(decoder.decode(value), done);
 					}
 				} else if (res.headers.get('content-type')?.includes('multipart/form-data')) {
-					return deform((await res.formData()) as FormData) as { result: unknown };
+					return [deform((await res.formData()) as FormData), null];
 				}
 			}
 		});

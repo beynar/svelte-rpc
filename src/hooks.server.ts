@@ -2,13 +2,16 @@ import { createRPCHandle, procedure, stream } from '$lib/server.js';
 import type { Router } from '$lib/types.js';
 import { sequence } from '@sveltejs/kit/hooks';
 import { date, object, string, array, set, map, optional } from 'valibot';
-import OpenAI from 'openai';
+import { createOpenAI } from '@ai-sdk/openai';
+
 import { PRIVATE_OPEN_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import { subRouter } from './test.js';
 import { error } from '@sveltejs/kit';
 
-const openai = new OpenAI({
+import { streamObject } from 'ai';
+
+const openai = createOpenAI({
 	apiKey: PRIVATE_OPEN_API_KEY
 });
 
@@ -67,6 +70,33 @@ const router = {
 				}
 			});
 		}),
+	objectStreaming: procedure()
+		.input(z.string())
+		.handle(async ({ input }) => {
+			const result = await streamObject({
+				model: openai('gpt-4o-mini'),
+				mode: 'json',
+				schema: z.array(
+					z.object({
+						name: z.string().describe('Name of a fictional person.'),
+						message: z.string().describe('Message. Do not use emojis or links.')
+					})
+				),
+				prompt: `Generate 3 notifications for a messages app, make it funny.`
+			});
+
+			return stream(result.partialObjectStream, {
+				onChunk: ({ chunk, first }) => {
+					// console.log('AI chunk received', chunk, first);
+				},
+				onEnd: (chunks) => {
+					// console.log('AI stream ended', chunks);
+				},
+				onStart: () => {
+					// console.log('AI stream started');
+				}
+			});
+		}),
 
 	test: {
 		partial: procedure()
@@ -85,7 +115,6 @@ const router = {
 				})
 			)
 			.handle(async ({ input, event }) => {
-
 				return input;
 			}),
 		optional: procedure()
