@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.0.57
+
+[compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.53...v0.0.57)
+
+### 🚀 Enhancements
+
+- 🔥  api calls now returns a discriminated tupple with the error. ([43f36d5](https://github.com/beynar/svelte-rpc/commit/43f36d5))
+
+### 🏡 Chore
+
+- **release:** V0.0.53 ([b8203f6](https://github.com/beynar/svelte-rpc/commit/b8203f6))
+
+### ❤️ Contributors
+
+- Beynar <arnaud@derbey.dev>
+
 ## v0.0.53
 
 [compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.43...v0.0.53)
