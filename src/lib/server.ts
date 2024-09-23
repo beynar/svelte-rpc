@@ -17,15 +17,27 @@ import type {
 import { createRecursiveProxy } from './client.js';
 import { error, handleError } from './error.js';
 
+// const getHandler = (router: Router, path: string[]) => {
+// 	type H = Router | Handler<any, any, any> | undefined;
+// 	let handler: H = router;
+// 	path.forEach((segment) => {
+// 		handler = handler?.[segment as keyof typeof handler]
+// 			? (handler?.[segment as keyof typeof handler] as H)
+// 			: undefined;
+// 	});
+// 	return (handler ? handler : null) as any | null;
+// };
+
 const getHandler = (router: Router, path: string[]) => {
 	type H = Router | Handler<any, any, any> | undefined;
 	let handler: H = router;
-	path.forEach((segment) => {
-		handler = handler?.[segment as keyof typeof handler]
-			? (handler?.[segment as keyof typeof handler] as H)
-			: undefined;
-	});
-	return (handler ? handler : null) as any | null;
+	for (const segment of path) {
+		handler = handler?.[segment as keyof typeof handler] as H;
+	}
+	if (!handler) {
+		throw error('NOT_FOUND', 'Route not found');
+	}
+	return handler as Handler<any, any, any>;
 };
 
 const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
@@ -36,42 +48,40 @@ const createCaller = <R extends Router>(router: R, event: RequestEvent) => {
 	}, []) as API<R>;
 };
 
-export const stream = <C>(result: ReadableStream<C>, callbacks?: StreamsCallbacks<C>) => {
-	console.log(result.locked);
-	try {
-		const streamReader = result.getReader();
+export const stream = <C>(
+	result: ReadableStream<C>,
+	callbacks?: StreamsCallbacks<C>
+): ReadableStream<C> => {
+	const streamReader = result.getReader();
 
-		const chunks: C[] = [];
-		let first = true;
-		const decoder = new TextDecoder();
-		const stream = new ReadableStream({
-			async start(controller) {
-				await callbacks?.onStart?.();
-				const push = async () => {
-					const { done, value } = await streamReader.read();
-					console.log({ value });
-					if (done) {
-						await callbacks?.onEnd?.(chunks);
-						controller.close();
-						return;
-					} else if (value) {
-						const chunk =
-							typeof value === 'string' ? tryParse<C>(decoder.decode(value as any)) : value;
-						console.log({ chunk });
-						await callbacks?.onChunk?.({ chunk, first });
-						chunks.push(chunk);
-						first = false;
-					}
-					controller.enqueue(value);
-					push();
-				};
+	const chunks: C[] = [];
+	let first = true;
+	const decoder = new TextDecoder();
+	const stream = new ReadableStream({
+		async start(controller) {
+			await callbacks?.onStart?.();
+			const push = async () => {
+				const { done, value } = await streamReader.read();
+				console.log({ value });
+				if (done) {
+					await callbacks?.onEnd?.(chunks);
+					controller.close();
+					return;
+				} else if (value) {
+					const chunk =
+						typeof value === 'string' ? tryParse<C>(decoder.decode(value as any)) : value;
+					console.log({ chunk });
+					await callbacks?.onChunk?.({ chunk, first });
+					chunks.push(chunk);
+					first = false;
+				}
+				controller.enqueue(value);
 				push();
-			}
-		});
-		return stream as ReadableStream<C>;
-	} catch (error) {
-		console.log(error);
-	}
+			};
+			push();
+		}
+	});
+	return stream as ReadableStream<C>;
 };
 
 export const createRPCHandle = <R extends Router>({
@@ -115,8 +125,8 @@ export const createRPCHandle = <R extends Router>({
 			};
 
 			const payload = isClientRequest
-				? deform(await event.request.clone().formData())
-				: await event.request.clone().json();
+				? deform(await event.request.formData())
+				: await event.request.json();
 			try {
 				const data = parse(handler.schema, payload);
 				const result = await handler.call(event, data);
@@ -142,8 +152,8 @@ export const createRPCHandle = <R extends Router>({
 						);
 					}
 				}
-			} catch (error) {
-				return handleError(error);
+			} catch (err) {
+				return handleError(err);
 			}
 		}
 		return resolve(event);
@@ -209,10 +219,8 @@ export class Handler<
 		event: RequestEvent
 	): Promise<ReturnOfMiddlewares<M>> => {
 		const data = {};
-		if (middlewares) {
-			for (const middleware of middlewares) {
-				Object.assign(data, await middleware(event as any));
-			}
+		for (const middleware of middlewares) {
+			Object.assign(data, await middleware(event as any));
 		}
 		return data as ReturnOfMiddlewares<M>;
 	};

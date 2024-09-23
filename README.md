@@ -109,6 +109,8 @@ export const api = createRPCClient<AppRouter>({
   // The headers to send with the request
   // You can also pass a function that will be called before the fetch request, the can be async and receive the input and the path of the procedure
   headers: {},
+  // If true, the api will throw an error when the request fails
+  throwOnError: false,
   // Called when the request fails
   onError: (error) => {
     console.error(error);
@@ -125,9 +127,14 @@ export const api = createRPCClient<AppRouter>({
   import { onMount } from 'svelte';
 
   onMount(async () => {
-    const result = await api.test({ name: 'world' });
-    console.log(result);
-    // result is of type { hello: string }
+    // here result is of type { hello: string } | null because of potention error
+    const [result, error] = await api.test({ name: 'world' });
+    if (error) {
+      console.error(error);
+    } else {
+      // here result is of type { hello: string }
+      console.log(result);
+    }
   });
 </script>
 ```
