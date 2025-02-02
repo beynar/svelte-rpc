@@ -12,9 +12,9 @@ I needed to use cookies methods inside my procedures, to handle file uploads/dow
 - Same type safety as TRPC
 - Familiar syntax to define procedures
 - Simpler api (no .mutate, .query) just call the procedure itself
-- Works all standard validators using the `standard-schema` specification
+- Works with all standard validators using the `standard-schema` specification
 - Ability to handle file uploads
-- Handle Map and Set URL Date BigInt File Infinity -Infinity NaN and RegExp
+- Use a combination of formData and devalue to handle Map and Set URL Date BigInt File Infinity -Infinity NaN and RegExp
 - Type safe streamed response
 - Very tiny, client and server are both under 2kb gzipped
 - Can set and delete cookies inside the procedures
