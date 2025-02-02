@@ -1,0 +1,77 @@
+{
+	"name": "svelte-rpc",
+	"version": "1.0.0",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build && npm run package",
+		"preview": "vite preview",
+		"package": "svelte-kit sync && svelte-package && publint",
+		"package-dev": "svelte-package --watch",
+		"prepublishOnly": "npm run package && node prepare.js",
+		"test": "npm run test:integration && npm run test:unit",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test:integration": "playwright test",
+		"test:unit": "vitest",
+		"release": "npx changelogen@latest --release"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"require": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client.d.ts",
+			"import": "./dist/client.js",
+			"require": "./dist/client.js",
+			"svelte": "./dist/client.js"
+		}
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"peerDependencies": {
+		"@sveltejs/kit": "^2.8.0",
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.50.1",
+		"@sveltejs/adapter-auto": "^3.3.1",
+		"@sveltejs/adapter-cloudflare": "^4.9.0",
+		"@sveltejs/kit": "^2.16.1",
+		"@sveltejs/package": "^2.3.9",
+		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"@types/eslint": "^8.56.12",
+		"@typescript-eslint/eslint-plugin": "^8.22.0",
+		"@typescript-eslint/parser": "^8.22.0",
+		"ai": "^3.4.33",
+		"esbuild": "^0.24.2",
+		"eslint": "^9.19.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-svelte": "^2.46.1",
+		"node-dir": "^0.1.17",
+		"openai": "^4.82.0",
+		"prettier": "^3.4.2",
+		"prettier-plugin-svelte": "^3.3.3",
+		"publint": "^0.1.16",
+		"svelte": "5.1.12",
+		"svelte-check": "^3.8.6",
+		"tslib": "^2.8.1",
+		"type-fest": "^4.33.0",
+		"typescript": "^5.7.3",
+		"vite": "^6.0.11",
+		"vitest": "^3.0.4"
+	},
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"dependencies": {
+		"cookie": "^1.0.2",
+		"devalue": "^5.1.1",
+		"esm-env": "^1.2.2"
+	}
+}

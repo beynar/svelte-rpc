@@ -1,12 +1,28 @@
 # Changelog
 
+## v1.0.0
+
+### 🩹 Fixes
+
+- Enhanced error handling with proper HTTP status text responses. Errors are now returned to the client.
+
+### 🏡 Chore
+
+- Added support for standard schema specification, enabling compatibility with all standard validators.
+- Updated dependencies and Svelte to latest versions.
+- Restructured project into a monorepo architecture for better code organization.
+
+### 🚀 Enhancements
+
+- Streamlined handling of streamed results by adding native support for readable streams and async iterables in procedures. This simplifies integration with AI SDK and similar streaming use cases.
+
 ## v0.0.57
 
 [compare changes](https://github.com/beynar/svelte-rpc/compare/v0.0.53...v0.0.57)
 
 ### 🚀 Enhancements
 
-- 🔥  api calls now returns a discriminated tupple with the error. ([43f36d5](https://github.com/beynar/svelte-rpc/commit/43f36d5))
+- 🔥 api calls now returns a discriminated tupple with the error. ([43f36d5](https://github.com/beynar/svelte-rpc/commit/43f36d5))
 
 ### 🏡 Chore
 
@@ -46,7 +62,7 @@
 
 ### 🚀 Enhancements
 
-- 🔥  Use output and input types from zod and valibot to better handle procedure type ([ac10084](https://github.com/beynar/svelte-rpc/commit/ac10084))
+- 🔥 Use output and input types from zod and valibot to better handle procedure type ([ac10084](https://github.com/beynar/svelte-rpc/commit/ac10084))
 
 ### 🏡 Chore
 
@@ -74,7 +90,7 @@
 
 ### 🩹 Fixes
 
-- 🐛  simplify isObject to better handle svelte 5 $state ([946439f](https://github.com/beynar/svelte-rpc/commit/946439f))
+- 🐛 simplify isObject to better handle svelte 5 $state ([946439f](https://github.com/beynar/svelte-rpc/commit/946439f))
 
 ### 🏡 Chore
 
