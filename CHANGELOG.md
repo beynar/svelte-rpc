@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.1
+
+### 🩹 Chore
+
+- Removed cookie dependency.
+
 ## v1.0.0
 
 ### 🩹 Fixes

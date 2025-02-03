@@ -1,6 +1,6 @@
 {
 	"name": "svelte-rpc",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -70,7 +70,6 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"cookie": "^1.0.2",
 		"devalue": "^5.1.1",
 		"esm-env": "^1.2.2"
 	}

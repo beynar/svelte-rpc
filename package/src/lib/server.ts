@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type RequestEvent, type Handle as SvelteKitHandle, json } from '@sveltejs/kit';
-import { tryParse } from './utils.js';
 import { deform, form } from './deform.js';
-import type { SerializeOptions } from 'cookie';
 import type {
 	API,
 	HandleFunction,
@@ -15,6 +13,8 @@ import type {
 import { createRecursiveProxy } from './client.js';
 import { error, handleError } from './error.js';
 import type { StandardSchemaV1 } from './standardSchema.js';
+
+type SerializeOptions = Parameters<RequestEvent['cookies']['set']>[2];
 
 const getHandler = (router: Router, path: string[]) => {
 	type H = Router | Handler<any, any, any> | undefined;
